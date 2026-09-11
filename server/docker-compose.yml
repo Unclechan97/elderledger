@@ -12,13 +12,19 @@ services:
     restart: unless-stopped
 
   asr: # FunASR runtime（Paraformer 离线版，CPU）
-    # 镜像 tag 以 FunASR 官方文档为准：https://github.com/alibaba-damo-academy/FunASR/blob/main/runtime/docs/SDK_advanced_guide_offline_zh.md
+    # 镜像默认 Cmd 是 /bin/bash，必须显式起服务脚本
+    # --certfile 0：关闭自签 TLS，客户端用 ws://
+    # 内存紧张时可追加 --lm-dir ""（跳过语言模型，省约 1GB 内存；M2 实测再定）
+    # profiles=["asr"]：默认不随 compose up 启动（机器内存有限），M2 时用
+    #   docker compose --profile asr up -d 显式启动
     image: registry.cn-hangzhou.aliyuncs.com/funasr_repo/funasr:funasr-runtime-sdk-cpu-0.4.0
+    command: bash /workspace/FunASR/runtime/run_server.sh --certfile 0 --keyfile 0
     ports:
       - "10095:10095"
     volumes:
       - asr-models:/workspace/models # 模型缓存，避免重启重复下载（modelscope 国内源，较快）
     restart: unless-stopped
+    profiles: ["asr"]
 
   tts: # edge-tts FastAPI 封装
     build: ./tts

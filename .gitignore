@@ -1,6 +1,7 @@
 node_modules/
 server/data/
 server/.env
+server/build.log
 server/tts/__pycache__/
 dist/
 *.log

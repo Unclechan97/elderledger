@@ -5,10 +5,10 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY package.json ./
-# 走 npmmirror（国内网络），并镜像 better-sqlite3 的二进制
-RUN npm config set registry https://registry.npmmirror.com \
-    && npm config set better_sqlite3_binary_host_mirror https://npmmirror.com/mirrors/better-sqlite3 \
-    && npm install
+# 走 npmmirror（国内网络）。注意：新版 npm 禁止 npm config set 下划线键，必须用 npm_config_* 环境变量
+ENV npm_config_registry=https://registry.npmmirror.com \
+    npm_config_better_sqlite3_binary_host_mirror=https://npmmirror.com/mirrors/better-sqlite3
+RUN npm install
 COPY tsconfig.json ./
 COPY src ./src
 COPY scripts ./scripts
