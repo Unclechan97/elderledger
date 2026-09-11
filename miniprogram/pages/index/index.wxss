@@ -60,11 +60,12 @@
 .cat-grid {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center; /* 不足一行的末行居中 */
   gap: 16rpx;
 }
 
 .cat-item {
-  width: 160rpx;
+  width: 158rpx; /* 4 列 ×158 + 3 间距 ×16 = 680 ≤ 内容区 686rpx */
   height: 150rpx;
   display: flex;
   flex-direction: column;
