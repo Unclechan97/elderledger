@@ -1,0 +1,30 @@
+services:
+  app: # Express 5 + TypeScript + SQLite
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/app/data # elderledger.db
+    env_file: .env
+    # asr 模型首载慢（数分钟），不阻塞 app 启动；app 按请求惰性连接
+    depends_on:
+      - tts
+    restart: unless-stopped
+
+  asr: # FunASR runtime（Paraformer 离线版，CPU）
+    # 镜像 tag 以 FunASR 官方文档为准：https://github.com/alibaba-damo-academy/FunASR/blob/main/runtime/docs/SDK_advanced_guide_offline_zh.md
+    image: registry.cn-hangzhou.aliyuncs.com/funasr_repo/funasr:funasr-runtime-sdk-cpu-0.4.0
+    ports:
+      - "10095:10095"
+    volumes:
+      - asr-models:/workspace/models # 模型缓存，避免重启重复下载（modelscope 国内源，较快）
+    restart: unless-stopped
+
+  tts: # edge-tts FastAPI 封装
+    build: ./tts
+    ports:
+      - "55001:55001"
+    restart: unless-stopped
+
+volumes:
+  asr-models:

@@ -1,0 +1,8 @@
+{
+  "name": "elderledger-miniprogram",
+  "private": true,
+  "devDependencies": {
+    "miniprogram-api-typings": "^4.0.0",
+    "typescript": "^5.6.0"
+  }
+}

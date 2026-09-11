@@ -1,0 +1,21 @@
+<view class="page">
+  <view class="header">
+    <view class="date">{{dateText}}</view>
+    <view class="summary-label">本月已花</view>
+    <view class="summary-amount">¥ {{monthlyText}}</view>
+  </view>
+
+  <view class="big-btn primary" bindtap="onVoiceTap">🎤 说 一 笔</view>
+  <view class="big-btn" bindtap="onPhotoTap">📷 拍 一 张</view>
+  <view class="big-btn" bindtap="onManualTap">✋ 手 动 记</view>
+
+  <view class="hint">M0 冒烟 · 服务连接：{{connState}}</view>
+
+  <view class="section-title">预置分类（/api/categories）</view>
+  <view class="cat-grid">
+    <view class="cat-item" wx:for="{{categories}}" wx:key="id">
+      <text class="cat-icon">{{item.icon}}</text>
+      <text class="cat-name">{{item.name}}</text>
+    </view>
+  </view>
+</view>

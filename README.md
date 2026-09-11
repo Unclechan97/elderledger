@@ -51,6 +51,24 @@
 | M4 适老化打磨 | 字号走查、全程语音、防误触、老人实测 | ⬜ |
 | M5 家人协同 + 导出 | 子女绑定只读、CSV 导出 | ⬜ |
 
+## 快速开始（本地开发）
+
+```bash
+# 1. 服务端：三容器（app / asr / tts）
+cd server
+cp .env.example .env          # 填入 ZHIPU_API_KEY（open.bigmodel.cn 控制台获取）
+docker compose up -d --build  # asr 首次启动需下载模型（数 GB，modelscope 国内源），耐心等待
+
+# 2. 冒烟
+curl http://127.0.0.1:3000/api/categories          # 预置分类 JSON
+curl http://127.0.0.1:3000/health                  # app 健康
+docker compose exec app node scripts/asr-smoke.js data/test.wav   # 语音转写冒烟
+
+# 3. 小程序端
+# 微信开发者工具 → 导入 miniprogram/（AppID 已预填，域名校验已默认关闭）
+# 真机预览：utils/config.ts 的 BASE_URL 改成电脑局域网 IP，手机与电脑同一 WiFi
+```
+
 ## 目录结构（规划）
 
 ```

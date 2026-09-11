@@ -1,0 +1,6 @@
+/* 适老化基线：暖底高对比 + 大字（正文 ≥ 36rpx） */
+page {
+  background: #FFF8F0;
+  color: #33302B;
+  font-size: 36rpx;
+}

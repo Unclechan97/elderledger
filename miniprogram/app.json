@@ -1,0 +1,11 @@
+{
+  "pages": ["pages/index/index"],
+  "window": {
+    "navigationBarTitleText": "银龄记账",
+    "navigationBarBackgroundColor": "#FFF8F0",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#FFF8F0"
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}
