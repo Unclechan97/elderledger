@@ -9,7 +9,7 @@
 
 | 方式 | 流程 | 技术 |
 |------|------|------|
-| 🎤 说一笔 | 按住说话 → 语音转文字 → LLM 解析金额/分类/日期 → 大卡片确认 → 语音播报"记好了" | WechatSI 插件 + GLM-4-Flash |
+| 🎤 说一笔 | 按住说话 → 语音转文字 → LLM 解析金额/分类/日期 → 大卡片确认 → 语音播报"记好了" | RecorderManager + FunASR（Docker）+ GLM-4-Flash |
 | 📷 拍一张 | 拍小票 / 微信支付宝支付截图 → 上传 → 多模态识别提取 → 大卡片确认 | GLM-4V-Flash |
 | ✋ 手动记 | 大数字键盘 + 分类九宫格 + 日期默认今天，3 步内完成 | 原生自绘适老组件 |
 
@@ -18,11 +18,13 @@
 | 层 | 选型 | 成本 |
 |----|------|------|
 | 小程序端 | 微信原生小程序 + TypeScript | ¥0 |
-| 语音识别/播报 | 微信同声传译插件 WechatSI（官方免费） | ¥0 |
+| 语音识别 | FunASR Paraformer（本地 Docker，CPU 推理） | ¥0 |
+| 语音播报 | edge-tts（本地 Docker，免费无密钥） | ¥0 |
 | 文本语义解析 | GLM-4-Flash（免费，json_schema 结构化输出） | ¥0 |
 | 图片识别 | GLM-4V-Flash（免费多模态，单图 ≤ 5MB） | ¥0 |
 | 后端 | Node.js 20 + Express 5 + TypeScript | ¥0 |
-| 数据库 | SQLite（better-sqlite3，WAL 模式） | ¥0 |
+| 数据库 | SQLite（better-sqlite3，WAL 模式，卷挂载） | ¥0 |
+| 部署 | Docker Compose：app / asr / tts 三容器，全服务本地化 | ¥0 |
 | 开发调试 | 微信开发者工具 + 局域网真机预览（本地为基准） | ¥0 |
 
 **本地开发阶段全链路零成本，无任何云服务依赖。**
@@ -42,7 +44,7 @@
 | 里程碑 | 内容 | 状态 |
 |--------|------|------|
 | 调研 + 需求设计 + 技术选型 | 本批次文档 | ✅ 完成 |
-| M0 脚手架 | 仓库结构、小程序模板、Express+SQLite 骨架 | ⬜ 待开始 |
+| M0 脚手架 | 仓库结构、小程序模板、Docker Compose 三容器骨架（app/asr/tts） | ⬜ 待开始 |
 | M1 手动记账闭环 | 分类九宫格、大键盘、明细、月汇总 | ⬜ |
 | M2 语音记账 | WechatSI + GLM-4-Flash 解析 + TTS 播报 | ⬜ |
 | M3 拍照记账 | 拍照上传 + GLM-4V 提取 + 失败兜底 | ⬜ |
@@ -61,6 +63,6 @@ ElderLedger/
 ## 主要调研来源
 
 - 开源记账：[ezbookkeeping](https://github.com/mayswind/ezbookkeeping)、[Firefly III](https://github.com/firefly-iii/firefly-iii)、[Actual Budget](https://github.com/actualbudget/actual)、[awesome-wechat-weapp 合集](https://github.com/justjavac/awesome-wechat-weapp)
-- 语音能力：微信同声传译插件 WechatSI（插件 APPID `wx069ba97219f66d99`，小程序管理后台「插件管理」添加）
+- 语音能力：~~微信同声传译插件 WechatSI~~（**实测个人主体不可添加**——插件类目"IT科技>软件服务提供商"对个人不开放，2026-09-11）；现方案：[FunASR](https://github.com/modelscope/FunASR)（本地 ASR）+ [edge-tts](https://github.com/rany2/edge-tts)（本地 TTS）
 - 图片识别：[智谱 GLM-4V-Flash（免费）](https://bigmodel.cn/dev/howuse/glm-4vflash)、[腾讯云票据 OCR（备选）](https://cloud.tencent.com/document/product/866/58257)、[GLM-4V 小票提取 JSON 实战](https://blog.csdn.net/weixin_44786513/article/details/144271881)
 - 适老化：工信部《移动互联网应用(App)适老化通用设计规范》（2021）、GB/T 37668-2019《信息技术 互联网内容无障碍可访问性技术要求与测试方法》
