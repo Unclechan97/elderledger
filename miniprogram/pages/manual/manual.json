@@ -3,6 +3,7 @@
   "usingComponents": {
     "big-keyboard": "../../components/big-keyboard/big-keyboard",
     "category-grid": "../../components/category-grid/category-grid",
-    "confirm-card": "../../components/confirm-card/confirm-card"
+    "confirm-card": "../../components/confirm-card/confirm-card",
+    "success-banner": "../../components/success-banner/success-banner"
   }
 }

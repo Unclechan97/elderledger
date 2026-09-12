@@ -1,4 +1,4 @@
-import { parseImage, createTransaction, getCategories, ParseResult } from '../../services/api';
+import { parseImage, createTransaction, getCategories, getSummary, ParseResult } from '../../services/api';
 import { fenToYuanText } from '../../utils/money';
 import { speak, stopSpeak } from '../../services/tts';
 
@@ -19,10 +19,13 @@ Page({
     categoryName: '',
     dateLabel: '今天',
     saving: false,
+    successVisible: false,
+    successText: '',
   },
 
   parsed: null as { kind: 'expense' | 'income'; amount_fen: number; category_id: number; occurred_on: string; confidence: number } | null,
   catMap: null as Record<number, CatInfo> | null,
+  successTimer: null as ReturnType<typeof setTimeout> | null,
 
   onUnload() {
     stopSpeak();
@@ -106,15 +109,38 @@ Page({
       source: 'photo',
       confidence: this.parsed.confidence,
     })
-      .then(() => {
-        this.setData({ phase: 'idle', photoPath: '', saving: false });
+      .then(async () => {
+        const totalLine = await this.monthTotalLine();
         this.parsed = null;
-        void speak('记好了');
-        setTimeout(() => wx.navigateBack(), 1200);
+        this.setData({ phase: 'idle', photoPath: '', saving: false });
+        this.showSuccess(`记好了${totalLine ? `，${totalLine}` : ''}`);
+        void speak('记好了'); // 连续记账：留在本页，方便接着拍下一张
       })
       .catch((err: Error) => {
         this.setData({ saving: false, phase: 'failed', failText: err.message || '保存失败' });
       });
+  },
+
+  async monthTotalLine(): Promise<string> {
+    try {
+      const s = await getSummary();
+      if (s.total_fen > 0) return `本月已花 ${fenToYuanText(s.total_fen)} 元`;
+    } catch {
+      /* 汇总失败不阻塞 */
+    }
+    return '';
+  },
+
+  showSuccess(text: string) {
+    if (this.successTimer) clearTimeout(this.successTimer);
+    this.setData({ successVisible: true, successText: text });
+    this.successTimer = setTimeout(() => {
+      this.setData({ successVisible: false });
+    }, 2500);
+  },
+
+  onDone() {
+    wx.navigateBack();
   },
 
   onRetry() {

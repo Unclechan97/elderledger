@@ -1,5 +1,5 @@
-import { getCategories, createTransaction, Category } from '../../services/api';
-import { yuanStrToFen } from '../../utils/money';
+import { getCategories, createTransaction, getSummary, Category } from '../../services/api';
+import { yuanStrToFen, fenToYuanText } from '../../utils/money';
 
 function fmtDate(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -19,9 +19,12 @@ Page({
     confirmVisible: false,
     pendingFen: 0,
     saving: false,
+    successVisible: false,
+    successText: '',
   },
 
   allCategories: [] as Category[],
+  successTimer: null as ReturnType<typeof setTimeout> | null,
 
   async onLoad() {
     const today = fmtDate(new Date());
@@ -109,14 +112,32 @@ Page({
         source: 'manual',
         confidence: 1,
       });
+      // 连续记账：不退出，清金额、保留分类，方便接着记下一笔
+      let totalLine = '';
+      try {
+        const s = await getSummary();
+        if (s.total_fen > 0) totalLine = `本月已花 ${fenToYuanText(s.total_fen)} 元`;
+      } catch {
+        /* 汇总拉取失败不阻塞记账反馈 */
+      }
+      this.showSuccess(`记好了${totalLine ? `，${totalLine}` : ''}`);
       this.setData({ confirmVisible: false, amount: '', pendingFen: 0, saving: false });
-      this.applyKind(this.data.kind);
-      wx.showToast({ title: '✅ 记好了', icon: 'none' });
-      setTimeout(() => wx.navigateBack(), 600);
     } catch (err) {
       this.setData({ saving: false });
       wx.showToast({ title: (err as Error).message || '保存失败', icon: 'none', duration: 2500 });
     }
+  },
+
+  showSuccess(text: string) {
+    if (this.successTimer) clearTimeout(this.successTimer);
+    this.setData({ successVisible: true, successText: text });
+    this.successTimer = setTimeout(() => {
+      this.setData({ successVisible: false });
+    }, 2500);
+  },
+
+  onDone() {
+    wx.navigateBack();
   },
 
   onEditBack() {

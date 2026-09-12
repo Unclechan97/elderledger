@@ -3,7 +3,10 @@
     <view class="pick-hint">拍一张支付成功的页面，或者小票</view>
     <view class="pick-btn" hover-class="pick-press" bindtap="chooseFromCamera">📷 拍 一 张</view>
     <view class="pick-btn" hover-class="pick-press" bindtap="chooseFromAlbum">🖼 从 相 册 选</view>
+    <view class="done-btn" hover-class="done-press" bindtap="onDone">完成，回首页</view>
   </view>
+
+  <success-banner visible="{{successVisible}}" text="{{successText}}" />
 
   <view class="working-area" wx:if="{{phase === 'working'}}">
     <image class="preview" src="{{photoPath}}" mode="aspectFit" />

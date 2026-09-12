@@ -19,6 +19,9 @@
   <big-keyboard bind:key="onKey" />
 
   <view class="save-btn" hover-class="save-press" bindtap="onSaveTap">记 好 了</view>
+  <view class="done-btn" hover-class="done-press" bindtap="onDone">完成，回首页</view>
+
+  <success-banner visible="{{successVisible}}" text="{{successText}}" />
 
   <confirm-card
     visible="{{confirmVisible}}"

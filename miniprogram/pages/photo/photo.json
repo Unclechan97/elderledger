@@ -1,4 +1,6 @@
 {
   "navigationBarTitleText": "拍照记账",
-  "usingComponents": {}
+  "usingComponents": {
+    "success-banner": "../../components/success-banner/success-banner"
+  }
 }

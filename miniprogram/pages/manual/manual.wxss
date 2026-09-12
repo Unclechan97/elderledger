@@ -92,3 +92,21 @@
 .save-press {
   background: #F4511E;
 }
+
+/* 次级：完成退出（连续记账模式下主动收尾） */
+.done-btn {
+  margin-top: 20rpx;
+  height: 96rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #F5EEE4;
+  border-radius: 20rpx;
+  color: #6D655B;
+  font-size: 36rpx;
+  font-weight: 600;
+}
+
+.done-press {
+  background: #FFE3D6;
+}

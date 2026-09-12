@@ -1,0 +1,25 @@
+.sb-wrap {
+  position: fixed;
+  top: 20rpx;
+  left: 32rpx;
+  right: 32rpx;
+  z-index: 999;
+}
+
+/* 记账成功反馈条：绿底白字大号，老人一眼可见 */
+.sb-bar {
+  background: #2E7D32;
+  border-radius: 20rpx;
+  padding: 28rpx 32rpx;
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #FFFFFF;
+  text-align: center;
+  box-shadow: 0 8rpx 24rpx rgba(46, 125, 50, 0.35);
+  animation: sb-in 0.25s ease-out;
+}
+
+@keyframes sb-in {
+  from { opacity: 0; transform: translateY(-16rpx); }
+  to { opacity: 1; transform: translateY(0); }
+}

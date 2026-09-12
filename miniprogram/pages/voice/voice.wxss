@@ -16,8 +16,28 @@
 
 .voice-area {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
   padding-top: 60rpx;
+}
+
+/* 次级：完成退出 */
+.done-btn {
+  margin-top: 44rpx;
+  width: 480rpx;
+  height: 96rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #F5EEE4;
+  border-radius: 20rpx;
+  color: #6D655B;
+  font-size: 36rpx;
+  font-weight: 600;
+}
+
+.done-press {
+  background: #FFE3D6;
 }
 
 .result-area {

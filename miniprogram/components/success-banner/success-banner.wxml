@@ -1,0 +1,3 @@
+<view class="sb-wrap" wx:if="{{visible}}">
+  <view class="sb-bar">✅ {{text}}</view>
+</view>

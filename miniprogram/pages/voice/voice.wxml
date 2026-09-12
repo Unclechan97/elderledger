@@ -3,7 +3,10 @@
 
   <view class="voice-area" wx:if="{{phase === 'idle' || phase === 'recording' || phase === 'recognizing'}}">
     <voice-button recording="{{phase === 'recording'}}" busy="{{phase === 'recognizing'}}" bind:start="onVoiceStart" bind:end="onVoiceEnd" />
+    <view class="done-btn" hover-class="done-press" bindtap="onDone" wx:if="{{phase === 'idle'}}">完成，回首页</view>
   </view>
+
+  <success-banner visible="{{successVisible}}" text="{{successText}}" />
 
   <view class="result-area" wx:if="{{phase === 'parsed'}}">
     <view class="result-line">💰 {{amountText}} 元</view>
