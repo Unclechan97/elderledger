@@ -13,6 +13,8 @@ const CASES = [
   ['昨天去公园玩花了十块', 'expense', 1000, '休闲娱乐', null],
   ['大前天买菜花了十块', 'expense', 1000, '吃饭买菜', dateOffset(-3)],
   ['前天打车花了二十块', 'expense', 2000, '交通出行', dateOffset(-2)],
+  ['卖菜挣了三十块', 'income', 3000, '生意进账', null],
+  ['去市场摆摊收了一百', 'income', 10000, '生意进账', null], // "市场"不能抢先判成买菜
 ];
 
 function dateOffset(offset) {

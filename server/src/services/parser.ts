@@ -88,8 +88,9 @@ export function extractAmountFen(text: string): number {
   return -1;
 }
 
-/** 分类同义词表（与 DB 种子分类对应，路由层负责 name→id） */
+/** 分类同义词表（与 DB 种子分类对应，路由层负责 name→id）。注意：生意进账放最前，"市场摆摊"不能被"市场"抢先判成买菜 */
 const CATEGORY_SYNONYMS: Array<{ name: string; kind: 'expense' | 'income'; re: RegExp }> = [
+  { name: '生意进账', kind: 'income', re: /做生意|摆摊|出摊|开店|卖菜|卖点|卖了|收废品|废品|房租|租金|摊位/ },
   { name: '吃饭买菜', kind: 'expense', re: /吃饭|买菜|买[菜面肉鱼米油]|菜|早饭|午饭|晚饭|早餐|午餐|晚餐|餐|水果|超市|市场|外卖|面条|鸡蛋|牛奶|面包/ },
   { name: '医疗药品', kind: 'expense', re: /药|医院|看病|挂号|医生|门诊|住院|体检|血压|血糖|打针|输液|检查/ },
   { name: '水电日用', kind: 'expense', re: /水电|电费|水费|燃气|煤气|天然气|物业|话费|充值|网费|宽带|日用|纸巾|洗衣粉/ },

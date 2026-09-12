@@ -26,8 +26,37 @@ parseRouter.post('/text', async (req, res) => {
   if (!text) return res.status(400).json({ error: 'text 不能为空' });
 
   const today = localDateStr();
+  const failResp = {
+    kind: null,
+    amount_fen: 0,
+    category_id: null,
+    occurred_on: today,
+    note: text.slice(0, 20),
+    confidence: 0,
+    parser: 'none',
+    message: '没听清金额，请再说一遍或手动输入',
+  };
 
-  // 1) LLM 层（配置了智谱 key 才启用）
+  // 1) 正则层优先：确定性计算，金额不会错（实测 LLM 会把"五毛八"算成 5.8 元）。
+  //    金额准确性 > 日期精度（"上个礼拜日"正则默认今天，可接受的偏差）。
+  const parsed: ParsedTxn | null = regexParse(text, today);
+  if (parsed) {
+    const cat = categoryByName(parsed.category_name, parsed.kind)
+      ?? categoryByName(parsed.kind === 'expense' ? '其他支出' : '其他收入', parsed.kind);
+    if (cat) {
+      return res.json({
+        kind: parsed.kind,
+        amount_fen: parsed.amount_fen,
+        category_id: cat.id,
+        occurred_on: parsed.occurred_on,
+        note: parsed.note,
+        confidence: Math.min(parsed.confidence, 0.85),
+        parser: parsed.parser,
+      });
+    }
+  }
+
+  // 2) LLM 兜底：正则拿不到金额的复杂语句（配了智谱 key 才启用）
   if (llmAvailable()) {
     try {
       const r = await llmParseText(text);
@@ -39,43 +68,16 @@ parseRouter.post('/text', async (req, res) => {
           category_id: cat.id,
           occurred_on: offsetDate(today, r.occurred_on_offset),
           note: r.note || text.slice(0, 20),
-          confidence: 0.95,
+          confidence: 0.9, // LLM 偶有金额换算错，置信度低于正则上限
           parser: 'llm',
         });
       }
     } catch (err) {
-      console.warn('[parse] LLM 失败，走正则兜底:', (err as Error).message);
+      console.warn('[parse] LLM 失败:', (err as Error).message);
     }
   }
 
-  // 2) 正则兜底层
-  const parsed: ParsedTxn | null = regexParse(text, today);
-  if (!parsed) {
-    return res.json({
-      kind: null,
-      amount_fen: 0,
-      category_id: null,
-      occurred_on: today,
-      note: text.slice(0, 20),
-      confidence: 0,
-      parser: 'none',
-      message: '没听清金额，请再说一遍或手动输入',
-    });
-  }
-
-  const cat = categoryByName(parsed.category_name, parsed.kind)
-    ?? categoryByName(parsed.kind === 'expense' ? '其他支出' : '其他收入', parsed.kind);
-  if (!cat) return res.status(500).json({ error: '分类种子数据缺失' });
-
-  return res.json({
-    kind: parsed.kind,
-    amount_fen: parsed.amount_fen,
-    category_id: cat.id,
-    occurred_on: parsed.occurred_on,
-    note: parsed.note,
-    confidence: Math.min(parsed.confidence, 0.85),
-    parser: parsed.parser,
-  });
+  return res.json(failResp);
 });
 
 // 图片解析：multer 收图 → base64 → GLM-4V-Flash → 结构化

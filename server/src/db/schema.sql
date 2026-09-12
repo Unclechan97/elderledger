@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS user (
 
 CREATE TABLE IF NOT EXISTS category (
   id     INTEGER PRIMARY KEY AUTOINCREMENT,
-  name   TEXT NOT NULL,
+  name   TEXT NOT NULL UNIQUE,
   icon   TEXT NOT NULL,
   color  TEXT NOT NULL,
   kind   TEXT NOT NULL,                        -- expense | income

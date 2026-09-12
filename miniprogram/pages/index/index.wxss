@@ -60,13 +60,23 @@
 
 .nav-item {
   flex: 1;
-  height: 104rpx;
+  height: 128rpx;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   background: #F5EEE4;
   border-radius: 20rpx;
-  font-size: 36rpx;
+}
+
+.nav-icon {
+  font-size: 44rpx;
+  line-height: 1.2;
+}
+
+.nav-text {
+  margin-top: 6rpx;
+  font-size: 28rpx;
   font-weight: 600;
 }
 

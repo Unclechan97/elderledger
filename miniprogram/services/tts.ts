@@ -5,7 +5,27 @@ import { BASE_URL } from '../utils/config';
 
 let currentAudio: WechatMiniprogram.InnerAudioContext | null = null;
 
+const TTS_ENABLED_KEY = 'tts_enabled';
+
+/** 播报总开关（默认开）。首页导航行可一键切换 */
+export function isTtsEnabled(): boolean {
+  try {
+    return wx.getStorageSync(TTS_ENABLED_KEY) !== false;
+  } catch {
+    return true;
+  }
+}
+
+export function setTtsEnabled(on: boolean) {
+  try {
+    wx.setStorageSync(TTS_ENABLED_KEY, on);
+  } catch {
+    /* 存储失败下次默认开 */
+  }
+}
+
 export function speak(text: string): Promise<void> {
+  if (!isTtsEnabled()) return Promise.resolve();
   return new Promise((resolve) => {
     stopSpeak();
     wx.downloadFile({

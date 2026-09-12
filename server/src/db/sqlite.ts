@@ -11,8 +11,8 @@ db.pragma('foreign_keys = ON');
 db.exec(fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8'));
 
 // 首次启动：预置分类（需求文档 §4-F5：支出 8 类 + 收入 3 类）
-const { n } = db.prepare('SELECT COUNT(*) AS n FROM category').get() as { n: number };
-if (n === 0) {
+// 预置分类：幂等补种（WHERE NOT EXISTS），已有库升级后自动补新分类
+{
   const rows: Array<[string, string, string, string, number]> = [
     ['吃饭买菜', '🥬', '#4CAF50', 'expense', 1],
     ['医疗药品', '💊', '#EF5350', 'expense', 2],
@@ -24,10 +24,13 @@ if (n === 0) {
     ['其他支出', '📦', '#8D6E63', 'expense', 8],
     ['退休金', '💰', '#F9A825', 'income', 1],
     ['子女给', '🧑‍🤝‍🧑', '#5C6BC0', 'income', 2],
-    ['其他收入', '📥', '#78909C', 'income', 3],
+    ['生意进账', '🏪', '#26A69A', 'income', 3], // 小生意/摆摊/房租等"自己挣的钱"
+    ['其他收入', '📥', '#78909C', 'income', 4],
   ];
-  const ins = db.prepare('INSERT INTO category (name, icon, color, kind, sort) VALUES (?, ?, ?, ?, ?)');
-  db.transaction(() => rows.forEach((r) => ins.run(...r)))();
+  const ins = db.prepare(
+    'INSERT INTO category (name, icon, color, kind, sort) SELECT ?, ?, ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM category WHERE name = ?)',
+  );
+  db.transaction(() => rows.forEach((r) => ins.run(r[0], r[1], r[2], r[3], r[4], r[0])))();
 }
 
 // M1：本地开发阶段单一默认用户（免登录）；M2 接 code2Session 后按 openid 建/查用户

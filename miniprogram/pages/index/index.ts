@@ -1,11 +1,13 @@
 import { getSummary } from '../../services/api';
 import { fenToYuanText } from '../../utils/money';
+import { isTtsEnabled, setTtsEnabled } from '../../services/tts';
 
 Page({
   data: {
     dateText: '',
     totalText: '0.00',
     diffText: '',
+    ttsOn: true,
   },
 
   onLoad() {
@@ -16,6 +18,15 @@ Page({
 
   onShow() {
     this.loadSummary();
+    this.setData({ ttsOn: isTtsEnabled() });
+  },
+
+  /** 播报总开关：首页一键切换，全局生效 */
+  onToggleSound() {
+    const on = !this.data.ttsOn;
+    setTtsEnabled(on);
+    this.setData({ ttsOn: on });
+    wx.showToast({ title: on ? '声音已打开' : '声音已关闭', icon: 'none' });
   },
 
   async loadSummary() {

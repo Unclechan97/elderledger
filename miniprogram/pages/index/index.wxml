@@ -11,8 +11,9 @@
   <view class="big-btn" hover-class="btn-press" bindtap="onManualTap">✋ 手 动 记</view>
 
   <view class="nav-row">
-    <view class="nav-item" hover-class="nav-press" bindtap="onListTap">📋 明细</view>
-    <view class="nav-item" hover-class="nav-press" bindtap="onStatsTap">📊 统计</view>
-    <view class="nav-item" hover-class="nav-press" bindtap="onFamilyTap">🧑‍🤝‍🧑 家人</view>
+    <view class="nav-item" hover-class="nav-press" bindtap="onListTap"><view class="nav-icon">📋</view><view class="nav-text">明细</view></view>
+    <view class="nav-item" hover-class="nav-press" bindtap="onStatsTap"><view class="nav-icon">📊</view><view class="nav-text">统计</view></view>
+    <view class="nav-item" hover-class="nav-press" bindtap="onFamilyTap"><view class="nav-icon">🧑‍🤝‍🧑</view><view class="nav-text">家人</view></view>
+    <view class="nav-item" hover-class="nav-press" bindtap="onToggleSound"><view class="nav-icon">{{ttsOn ? '🔊' : '🔇'}}</view><view class="nav-text">声音{{ttsOn ? '开' : '关'}}</view></view>
   </view>
 </view>
