@@ -1,0 +1,26 @@
+<view class="page">
+  <view class="recognized" wx:if="{{recognizedText}}">" {{recognizedText}} "</view>
+
+  <view class="voice-area" wx:if="{{phase === 'idle' || phase === 'recording' || phase === 'recognizing'}}">
+    <voice-button recording="{{phase === 'recording'}}" busy="{{phase === 'recognizing'}}" bind:start="onVoiceStart" bind:end="onVoiceEnd" />
+  </view>
+
+  <view class="result-area" wx:if="{{phase === 'parsed'}}">
+    <view class="result-line">💰 {{amountText}} 元</view>
+    <view class="result-line"> {{categoryIcon}} {{categoryName}}</view>
+    <view class="result-line">📅 {{dateLabel}}</view>
+    <view class="btn-row">
+      <view class="btn retry" hover-class="btn-press" bindtap="onRetry">重新说</view>
+      <view class="btn ok" hover-class="btn-press" bindtap="onConfirmSave">对，记好</view>
+    </view>
+  </view>
+
+  <view class="fail-area" wx:if="{{phase === 'failed'}}">
+    <view class="fail-emoji">🤔</view>
+    <view class="fail-text">{{failText}}</view>
+    <view class="btn-row">
+      <view class="btn retry" hover-class="btn-press" bindtap="onRetry">再试一次</view>
+      <view class="btn ok" hover-class="btn-press" bindtap="onManualFallback">手动记</view>
+    </view>
+  </view>
+</view>

@@ -41,12 +41,25 @@ export function transcribe(wav: Buffer, timeoutMs = 15000): Promise<string> {
       ws.send(JSON.stringify({ is_speaking: false }));
     });
 
+    // offline 模式实测：整段音频处理完只回一帧 {"text":"...","is_final":false}，
+    // is_final 恒为 false，不能等它。策略：收到非空 text 帧后留 500ms 宽限收尾帧，
+    // 期间没有新帧就认为转写完成；显式 is_final:true 立即完成。
+    let graceTimer: NodeJS.Timeout | null = null;
+    const complete = () => {
+      if (graceTimer) clearTimeout(graceTimer);
+      finish(() => resolve(text.trim()));
+    };
+
     ws.on('message', (data: WebSocket.RawData, isBinary: boolean) => {
       if (isBinary) return;
       try {
         const msg = JSON.parse(data.toString()) as { text?: string; is_final?: boolean };
-        if (typeof msg.text === 'string') text += msg.text;
-        if (msg.is_final) finish(() => resolve(text.trim()));
+        if (typeof msg.text === 'string' && msg.text) text += msg.text;
+        if (msg.is_final) complete();
+        else if (text) {
+          if (graceTimer) clearTimeout(graceTimer);
+          graceTimer = setTimeout(complete, 500);
+        }
       } catch {
         /* 忽略非 JSON 帧 */
       }

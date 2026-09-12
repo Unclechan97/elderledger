@@ -18,7 +18,9 @@ services:
     # profiles=["asr"]：默认不随 compose up 启动（机器内存有限），M2 时用
     #   docker compose --profile asr up -d 显式启动
     image: registry.cn-hangzhou.aliyuncs.com/funasr_repo/funasr:funasr-runtime-sdk-cpu-0.4.0
-    command: bash /workspace/FunASR/runtime/run_server.sh --certfile 0 --keyfile 0
+    # 必须先 cd 进脚本目录：run_server.sh 以相对路径 source ../egs/...（按 CWD 解析），
+    # 镜像 WORKDIR 是 /workspace，直接跑会报 parse_options.sh 不存在
+    command: bash -c "cd /workspace/FunASR/runtime && bash run_server.sh --certfile 0 --keyfile 0"
     ports:
       - "10095:10095"
     volumes:

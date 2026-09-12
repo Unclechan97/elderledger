@@ -4,6 +4,7 @@ import { categoriesRouter } from './routes/categories';
 import { transactionsRouter } from './routes/transactions';
 import { summaryRouter } from './routes/summary';
 import { asrRouter } from './routes/asr';
+import { parseRouter } from './routes/parse';
 import { ttsRouter } from './routes/tts';
 
 const app = express();
@@ -17,6 +18,7 @@ app.use('/api/categories', categoriesRouter);
 app.use('/api/transactions', transactionsRouter);
 app.use('/api/summary', summaryRouter);
 app.use('/api/asr', asrRouter);
+app.use('/api/parse', parseRouter);
 app.use('/api/tts', ttsRouter);
 
 app.listen(config.port, '0.0.0.0', () => {

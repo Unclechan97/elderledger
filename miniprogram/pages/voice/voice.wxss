@@ -1,0 +1,88 @@
+.page {
+  padding: 32rpx;
+  min-height: 80vh;
+  box-sizing: border-box;
+}
+
+/* 识别出的原话，大字回显 */
+.recognized {
+  margin: 8rpx 0 32rpx;
+  text-align: center;
+  font-size: 40rpx;
+  font-weight: 600;
+  color: #D84315;
+  line-height: 1.5;
+}
+
+.voice-area {
+  display: flex;
+  justify-content: center;
+  padding-top: 60rpx;
+}
+
+.result-area {
+  margin-top: 40rpx;
+  background: #FFFFFF;
+  border: 2rpx solid #EADFD2;
+  border-radius: 24rpx;
+  padding: 40rpx 32rpx;
+}
+
+.result-line {
+  font-size: 56rpx;
+  font-weight: 700;
+  text-align: center;
+  padding: 16rpx 0;
+}
+
+.btn-row {
+  display: flex;
+  gap: 24rpx;
+  margin-top: 40rpx;
+}
+
+.btn {
+  flex: 1;
+  height: 120rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 24rpx;
+  font-size: 40rpx;
+  font-weight: 700;
+}
+
+.btn.retry {
+  background: #F5EEE4;
+  color: #6D655B;
+}
+
+.btn.ok {
+  background: #2E7D32;
+  color: #FFFFFF;
+}
+
+.btn-press {
+  opacity: 0.85;
+}
+
+.fail-area {
+  margin-top: 40rpx;
+  text-align: center;
+}
+
+.fail-emoji {
+  font-size: 96rpx;
+}
+
+.fail-text {
+  margin-top: 20rpx;
+  font-size: 40rpx;
+  font-weight: 600;
+  color: #D84315;
+  line-height: 1.5;
+}
+
+.fail-area .btn-row {
+  margin-top: 36rpx;
+}

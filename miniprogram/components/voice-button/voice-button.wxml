@@ -1,0 +1,13 @@
+<view class="vb-wrap">
+  <view
+    class="vb-btn {{recording ? 'vb-recording' : ''}} {{busy ? 'vb-busy' : ''}}"
+    hover-class="vb-press"
+    bindtouchstart="onTouchStart"
+    bindtouchend="onTouchEnd"
+    bindtouchcancel="onTouchEnd"
+  >
+    <view class="vb-icon">🎤</view>
+    <view class="vb-text">{{busy ? '识别中…' : recording ? '松开 识别' : '按住 说话'}}</view>
+  </view>
+  <view class="vb-hint" wx:if="{{!recording && !busy}}">像打电话一样说出金额，如：今天买菜花了十五块五</view>
+</view>

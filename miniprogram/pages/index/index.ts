@@ -33,7 +33,7 @@ Page({
   },
 
   onVoiceTap() {
-    wx.showToast({ title: 'M2 上线：语音记账', icon: 'none' });
+    wx.navigateTo({ url: '/pages/voice/voice' });
   },
   onPhotoTap() {
     wx.showToast({ title: 'M3 上线：拍照记账', icon: 'none' });

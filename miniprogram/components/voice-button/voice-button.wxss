@@ -1,0 +1,58 @@
+.vb-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* 大圆钮：直径 320rpx，远超 88rpx 触控标准 */
+.vb-btn {
+  width: 320rpx;
+  height: 320rpx;
+  border-radius: 50%;
+  background: #FF7043;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8rpx 24rpx rgba(255, 112, 67, 0.35);
+}
+
+.vb-recording {
+  background: #D84315;
+  animation: vb-pulse 1s ease-in-out infinite;
+}
+
+@keyframes vb-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+  100% { transform: scale(1); }
+}
+
+.vb-busy {
+  background: #B0A69A;
+  box-shadow: none;
+}
+
+.vb-press {
+  transform: scale(0.97);
+}
+
+.vb-icon {
+  font-size: 88rpx;
+}
+
+.vb-text {
+  margin-top: 12rpx;
+  font-size: 42rpx;
+  font-weight: 700;
+  color: #FFFFFF;
+}
+
+.vb-hint {
+  margin-top: 28rpx;
+  max-width: 560rpx;
+  text-align: center;
+  font-size: 32rpx;
+  color: #8A8177;
+  line-height: 1.5;
+}

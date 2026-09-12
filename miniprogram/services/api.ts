@@ -86,3 +86,39 @@ export function deleteTransaction(id: number): Promise<{ ok: boolean }> {
 export function getSummary(): Promise<SummaryResp> {
   return request<SummaryResp>('GET', '/api/summary?period=month');
 }
+
+export interface ParseResult {
+  kind: 'expense' | 'income' | null;
+  amount_fen: number;
+  category_id: number | null;
+  occurred_on: string;
+  note: string;
+  confidence: number;
+  parser: string;
+  message?: string;
+}
+
+export function parseText(text: string): Promise<ParseResult> {
+  return request<ParseResult>('POST', '/api/parse/text', { text });
+}
+
+/** 录音文件上传转写（multipart，字段名 audio） */
+export function uploadAsr(filePath: string): Promise<{ text: string }> {
+  return new Promise((resolve, reject) => {
+    wx.uploadFile({
+      url: `${BASE_URL}/api/asr`,
+      filePath,
+      name: 'audio',
+      success: (r) => {
+        try {
+          const data = JSON.parse(r.data) as { text?: string; error?: string };
+          if (r.statusCode < 400) resolve({ text: data.text ?? '' });
+          else reject(new Error(data.error || `HTTP ${r.statusCode}`));
+        } catch {
+          reject(new Error(`响应不是 JSON（HTTP ${r.statusCode}）`));
+        }
+      },
+      fail: (e) => reject(new Error(e.errMsg || '上传失败')),
+    });
+  });
+}

@@ -1,0 +1,75 @@
+// POST /api/parse/text —— 语音/文字记账解析：LLM 优先（配了 key 才启用），正则兜底
+import { Router } from 'express';
+import { db } from '../db/sqlite';
+import { localDateStr } from '../utils/dates';
+import { regexParse, ParsedTxn } from '../services/parser';
+import { llmParseText, llmAvailable } from '../services/llm';
+
+export const parseRouter = Router();
+
+function categoryByName(name: string, kind: 'expense' | 'income'): { id: number } | null {
+  return (db.prepare('SELECT id FROM category WHERE name = ? AND kind = ?').get(name, kind) as { id: number } | undefined) ?? null;
+}
+
+function offsetDate(today: string, offset: number): string {
+  const [y, m, d] = today.split('-').map(Number);
+  const dt = new Date(y, m - 1, d + offset);
+  return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+}
+
+parseRouter.post('/text', async (req, res) => {
+  const text = String((req.body as { text?: string })?.text ?? '').trim();
+  if (!text) return res.status(400).json({ error: 'text 不能为空' });
+
+  const today = localDateStr();
+
+  // 1) LLM 层（配置了智谱 key 才启用）
+  if (llmAvailable()) {
+    try {
+      const r = await llmParseText(text);
+      const cat = categoryByName(r.category, r.kind) ?? categoryByName(r.kind === 'expense' ? '其他支出' : '其他收入', r.kind);
+      if (cat) {
+        return res.json({
+          kind: r.kind,
+          amount_fen: r.amount_fen,
+          category_id: cat.id,
+          occurred_on: offsetDate(today, r.occurred_on_offset),
+          note: r.note || text.slice(0, 20),
+          confidence: 0.95,
+          parser: 'llm',
+        });
+      }
+    } catch (err) {
+      console.warn('[parse] LLM 失败，走正则兜底:', (err as Error).message);
+    }
+  }
+
+  // 2) 正则兜底层
+  const parsed: ParsedTxn | null = regexParse(text, today);
+  if (!parsed) {
+    return res.json({
+      kind: null,
+      amount_fen: 0,
+      category_id: null,
+      occurred_on: today,
+      note: text.slice(0, 20),
+      confidence: 0,
+      parser: 'none',
+      message: '没听清金额，请再说一遍或手动输入',
+    });
+  }
+
+  const cat = categoryByName(parsed.category_name, parsed.kind)
+    ?? categoryByName(parsed.kind === 'expense' ? '其他支出' : '其他收入', parsed.kind);
+  if (!cat) return res.status(500).json({ error: '分类种子数据缺失' });
+
+  return res.json({
+    kind: parsed.kind,
+    amount_fen: parsed.amount_fen,
+    category_id: cat.id,
+    occurred_on: parsed.occurred_on,
+    note: parsed.note,
+    confidence: Math.min(parsed.confidence, 0.85),
+    parser: parsed.parser,
+  });
+});

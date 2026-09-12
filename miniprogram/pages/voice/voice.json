@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "语音记账",
+  "usingComponents": {
+    "voice-button": "../../components/voice-button/voice-button"
+  }
+}
