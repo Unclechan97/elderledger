@@ -5,6 +5,8 @@ export const config = {
   dataDir: process.env.DATA_DIR || './data',
   /** Docker 内用服务名 ws://asr:10095；宿主机直跑用 ws://127.0.0.1:10095 */
   asrHost: process.env.ASR_HOST || 'ws://127.0.0.1:10095',
+  /** 语音识别实现：funasr（本地 Docker）；将来可换云 API 或 sherpa-onnx（services/asr/ 加实现） */
+  asrProvider: process.env.ASR_PROVIDER || 'funasr',
   ttsUrl: process.env.TTS_URL || 'http://127.0.0.1:55001',
   zhipuApiKey: process.env.ZHIPU_API_KEY || '',
   llmProvider: process.env.LLM_PROVIDER || 'zhipu',

@@ -1,5 +1,5 @@
 import WebSocket from 'ws';
-import { config } from '../config';
+import { config } from '../../config';
 
 /**
  * FunASR runtime WebSocket 客户端（offline 模式）
