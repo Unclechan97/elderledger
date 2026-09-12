@@ -1,4 +1,6 @@
 <view class="page">
+  <view class="as-banner" wx:if="{{asMode}}">正在看：{{asName}} 的账本（只读）</view>
+
   <view class="range-tabs">
     <view class="range-tab {{range === 'today' ? 'range-active' : ''}}" hover-class="tab-press" bindtap="setRange" data-range="today">今日</view>
     <view class="range-tab {{range === 'month' ? 'range-active' : ''}}" hover-class="tab-press" bindtap="setRange" data-range="month">本月</view>
@@ -18,7 +20,7 @@
       </view>
       <view class="txn-side">
         <view class="txn-amount {{item.kind === 'income' ? 'txn-amount-in' : ''}}">{{item.kind === 'income' ? '+' : '-'}}¥ {{item.amountText}}</view>
-        <view class="txn-del" hover-class="del-press" bindtap="onDelete" data-id="{{item.id}}">删除</view>
+        <view class="txn-del" wx:if="{{!asMode}}" hover-class="del-press" bindtap="onDelete" data-id="{{item.id}}">删除</view>
       </view>
     </view>
     <view class="empty" wx:if="{{!items.length}}">{{range === 'today' ? '今天还没记账' : '本月还没记账'}}</view>

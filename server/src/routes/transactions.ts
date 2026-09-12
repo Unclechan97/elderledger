@@ -1,6 +1,7 @@
 import { Router } from 'express';
-import { db, DEFAULT_USER_ID } from '../db/sqlite';
+import { db } from '../db/sqlite';
 import { localDateStr } from '../utils/dates';
+import { resolveUserId, resolveViewUserId } from '../utils/context';
 
 export const transactionsRouter = Router();
 
@@ -28,19 +29,26 @@ transactionsRouter.post('/', (req, res) => {
   const src = SOURCES.includes(source) ? source : 'manual';
   const conf = typeof confidence === 'number' ? confidence : 1;
 
+  // 家人代记：请求带 X-View-As 时写入老人账本（source 应为 family）
+  const selfId = resolveUserId(req);
+  const userId = resolveViewUserId(req, selfId);
+
   const info = db
     .prepare('INSERT INTO txn (user_id, kind, amount_fen, category_id, occurred_on, note, source, confidence) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
-    .run(DEFAULT_USER_ID, kind, amount, cat.id, occurred_on, String(note || ''), src, conf);
+    .run(userId, kind, amount, cat.id, occurred_on, String(note || ''), src, conf);
   res.status(201).json({ id: info.lastInsertRowid });
 });
 
 transactionsRouter.get('/', (req, res) => {
+  const selfId = resolveUserId(req);
+  const userId = resolveViewUserId(req, selfId);
+
   const range = req.query.range === 'today' ? 'today' : 'month';
   const today = localDateStr();
   const monthPrefix = today.slice(0, 7);
 
-  const where = range === 'today' ? 't.occurred_on = ?' : 't.occurred_on >= ? AND t.occurred_on <= ?';
-  const params = range === 'today' ? [today] : [`${monthPrefix}-01`, `${monthPrefix}-31`];
+  const where = range === 'today' ? 't.occurred_on = ? AND t.user_id = ?' : 't.occurred_on >= ? AND t.occurred_on <= ? AND t.user_id = ?';
+  const params = range === 'today' ? [today, userId] : [`${monthPrefix}-01`, `${monthPrefix}-31`, userId];
 
   const page = Math.max(1, Number(req.query.page) || 1);
   const pageSize = Math.min(50, Math.max(1, Number(req.query.pageSize) || 20));
@@ -65,9 +73,11 @@ transactionsRouter.get('/', (req, res) => {
 });
 
 transactionsRouter.delete('/:id', (req, res) => {
+  // 家人只读：删除只认自己的账本（不接 X-View-As，防家人误删老人记录）
+  const selfId = resolveUserId(req);
   const id = Number(req.params.id);
   if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ error: 'id 无效' });
-  const info = db.prepare('DELETE FROM txn WHERE id = ?').run(id);
+  const info = db.prepare('DELETE FROM txn WHERE id = ? AND user_id = ?').run(id, selfId);
   if (info.changes === 0) return res.status(404).json({ error: '记录不存在' });
   res.json({ ok: true });
 });

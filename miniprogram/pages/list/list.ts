@@ -1,6 +1,7 @@
 import { getTransactions, deleteTransaction, TxnItem } from '../../services/api';
 import { fenToYuanText } from '../../utils/money';
 import { speak } from '../../services/tts';
+import { getViewAsId, getViewAsName, clearViewAs } from '../../utils/identity';
 
 Page({
   data: {
@@ -8,10 +9,19 @@ Page({
     items: [] as Array<TxnItem & { amountText: string }>,
     expenseText: '0.00',
     incomeText: '0.00',
+    asMode: false,
+    asName: '',
   },
 
   onShow() {
+    // 家人代看：显示"只读"横幅并隐藏删除（数据隔离由服务端保证，这里只管呈现）
+    const asMode = !!getViewAsId();
+    this.setData({ asMode, asName: asMode ? getViewAsName() : '' });
     this.load();
+  },
+
+  onUnload() {
+    if (this.data.asMode) clearViewAs(); // 代看上下文只在浏览期间存在
   },
 
   setRange(e: WechatMiniprogram.TouchEvent) {
@@ -36,6 +46,7 @@ Page({
   },
 
   onDelete(e: WechatMiniprogram.TouchEvent) {
+    if (this.data.asMode) return; // 家人只读，双保险（按钮已隐藏）
     const id = Number(e.currentTarget.dataset.id);
     const item = this.data.items.find((it) => it.id === id);
     if (!item) return;

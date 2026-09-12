@@ -1,6 +1,7 @@
 import { getCategories, createTransaction, getSummary, Category } from '../../services/api';
 import { yuanStrToFen, fenToYuanText } from '../../utils/money';
 import { speak, stopSpeak } from '../../services/tts';
+import { getViewAsId, getViewAsName, clearViewAs } from '../../utils/identity';
 
 function fmtDate(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -22,6 +23,8 @@ Page({
     saving: false,
     successVisible: false,
     successText: '',
+    asMode: false,
+    asName: '',
   },
 
   allCategories: [] as Category[],
@@ -29,7 +32,8 @@ Page({
 
   async onLoad() {
     const today = fmtDate(new Date());
-    this.setData({ occurredOn: today, today });
+    const asMode = !!getViewAsId();
+    this.setData({ occurredOn: today, today, asMode, asName: asMode ? getViewAsName() : '' });
     try {
       const r = await getCategories();
       this.allCategories = [...r.expense, ...r.income];
@@ -37,6 +41,10 @@ Page({
     } catch {
       wx.showToast({ title: '服务没连上，请检查容器', icon: 'none', duration: 2500 });
     }
+  },
+
+  onUnload() {
+    if (this.data.asMode) clearViewAs(); // 代记上下文只在记账期间存在
   },
 
   applyKind(kind: 'expense' | 'income') {
@@ -113,7 +121,7 @@ Page({
         amount_fen: this.data.pendingFen,
         category_id: this.data.selectedCategoryId,
         occurred_on: this.data.occurredOn,
-        source: 'manual',
+        source: this.data.asMode ? 'family' : 'manual',
         confidence: 1,
       });
       // 连续记账：不退出，清金额、保留分类，方便接着记下一笔

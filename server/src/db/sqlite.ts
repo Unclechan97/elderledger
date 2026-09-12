@@ -37,3 +37,9 @@ db.exec(fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8'));
 const DEFAULT_OPENID = 'local-dev';
 db.prepare('INSERT OR IGNORE INTO user (openid, nickname) VALUES (?, ?)').run(DEFAULT_OPENID, '本机用户');
 export const DEFAULT_USER_ID = (db.prepare('SELECT id FROM user WHERE openid = ?').get(DEFAULT_OPENID) as { id: number }).id;
+
+// M5：邀请码列（已有库幂等迁移）
+{
+  const cols = (db.pragma('table_info(user)') as Array<{ name: string }>).map((c) => c.name);
+  if (!cols.includes('invite_code')) db.exec('ALTER TABLE user ADD COLUMN invite_code TEXT');
+}

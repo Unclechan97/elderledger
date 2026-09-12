@@ -1,4 +1,5 @@
 import { BASE_URL } from '../utils/config';
+import { identityHeaders } from '../utils/identity';
 
 export interface Category {
   id: number;
@@ -50,6 +51,7 @@ function request<T>(method: 'GET' | 'POST' | 'DELETE', url: string, data?: Recor
       url: `${BASE_URL}${url}`,
       method,
       data,
+      header: identityHeaders(),
       success: (r) => {
         if (r.statusCode < 400) resolve(r.data as T);
         else reject(new Error((r.data as { error?: string })?.error || `HTTP ${r.statusCode}`));
@@ -112,12 +114,53 @@ export function parseImage(filePath: string): Promise<ParseResult> {
   return uploadFileAs<ParseResult>(filePath, 'image', '/api/parse/image');
 }
 
+// ── M5 家人协同 ────────────────────────────────────────────
+
+export interface MeResp {
+  id: number;
+  nickname: string;
+  role: 'elder' | 'family';
+  family_of: number | null;
+  invite_code: string | null;
+  elder: { id: number; nickname: string } | null;
+}
+
+export function getMe(): Promise<MeResp> {
+  return request<MeResp>('GET', '/api/family/me');
+}
+
+export function createInvite(): Promise<{ invite_code: string }> {
+  return request<{ invite_code: string }>('POST', '/api/family/invite', {});
+}
+
+export function bindFamily(code: string): Promise<{ family_user_id: number; elder: { id: number; nickname: string } }> {
+  return request<{ family_user_id: number; elder: { id: number; nickname: string } }>('POST', '/api/family/bind', { code });
+}
+
+export interface ElderSummary {
+  id: number;
+  nickname: string;
+  expense_fen: number;
+  income_fen: number;
+  month_count: number;
+}
+
+export function getElders(): Promise<{ elders: ElderSummary[] }> {
+  return request<{ elders: ElderSummary[] }>('GET', '/api/family/elders');
+}
+
+/** CSV 导出下载地址（wx.downloadFile 用，header 单独传 identityHeaders()） */
+export function exportCsvUrl(month: string): string {
+  return `${BASE_URL}/api/export/csv?month=${month}`;
+}
+
 function uploadFileAs<T>(filePath: string, name: string, url: string): Promise<T> {
   return new Promise((resolve, reject) => {
     wx.uploadFile({
       url: `${BASE_URL}${url}`,
       filePath,
       name,
+      header: identityHeaders(),
       success: (r) => {
         try {
           const data = JSON.parse(r.data) as T & { error?: string };

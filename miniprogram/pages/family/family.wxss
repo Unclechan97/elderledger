@@ -1,0 +1,118 @@
+.page {
+  min-height: 100vh;
+  padding: 32rpx;
+  box-sizing: border-box;
+  background: #fff8f0;
+}
+
+.hero-card {
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 40rpx 32rpx;
+  margin-bottom: 32rpx;
+}
+
+.hero-title {
+  font-size: 44rpx;
+  font-weight: 600;
+  color: #3e2723;
+  margin-bottom: 16rpx;
+}
+
+.hero-desc {
+  font-size: 36rpx;
+  color: #6d4c41;
+  line-height: 1.6;
+  margin-bottom: 28rpx;
+}
+
+/* 邀请码：超大字 + 分隔间距，方便念和抄 */
+.invite-code {
+  font-size: 88rpx;
+  font-weight: 700;
+  letter-spacing: 18rpx;
+  color: #4caf50;
+  background: #f1f8e9;
+  border-radius: 16rpx;
+  text-align: center;
+  padding: 28rpx 0 28rpx 18rpx; /* 抵消最后一个字母的 letter-spacing */
+  margin-bottom: 28rpx;
+}
+
+.invite-empty {
+  font-size: 36rpx;
+  color: #a1887f;
+  text-align: center;
+  padding: 28rpx 0;
+  margin-bottom: 28rpx;
+}
+
+.bind-input {
+  font-size: 56rpx;
+  font-weight: 600;
+  letter-spacing: 12rpx;
+  text-align: center;
+  color: #3e2723;
+  background: #f5f5f5;
+  border-radius: 16rpx;
+  padding: 24rpx 12rpx;
+  margin-bottom: 28rpx;
+}
+
+.big-btn {
+  height: 96rpx;
+  line-height: 96rpx;
+  text-align: center;
+  font-size: 40rpx;
+  font-weight: 600;
+  color: #fff;
+  background: #4caf50;
+  border-radius: 20rpx;
+  margin-bottom: 24rpx;
+}
+
+.btn-press {
+  opacity: 0.85;
+  transform: scale(0.98);
+}
+
+.stat-row {
+  display: flex;
+  margin-top: 8rpx;
+}
+
+.stat {
+  flex: 1;
+  text-align: center;
+}
+
+.stat-num {
+  font-size: 44rpx;
+  font-weight: 700;
+  color: #d84315;
+  margin-bottom: 8rpx;
+}
+
+.stat-num-in {
+  color: #2e7d32;
+}
+
+.stat-label {
+  font-size: 32rpx;
+  color: #8d6e63;
+}
+
+.mini-link {
+  text-align: center;
+  font-size: 30rpx;
+  color: #8d6e63;
+  padding: 24rpx 0;
+  text-decoration: underline;
+}
+
+.loading {
+  text-align: center;
+  font-size: 36rpx;
+  color: #8d6e63;
+  padding: 120rpx 0;
+}

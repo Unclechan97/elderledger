@@ -1,33 +1,37 @@
 import { Router } from 'express';
 import { db } from '../db/sqlite';
 import { localDateStr, prevMonthPrefix } from '../utils/dates';
+import { resolveUserId, resolveViewUserId } from '../utils/context';
 
 export const summaryRouter = Router();
 
 /** GET /api/summary?period=month —— 首页大字汇总 + 月度分类占比（stats 页共用） */
-summaryRouter.get('/', (_req, res) => {
+summaryRouter.get('/', (req, res) => {
+  const selfId = resolveUserId(req);
+  const userId = resolveViewUserId(req, selfId);
+
   const month = localDateStr().slice(0, 7); // YYYY-MM
   const prev = prevMonthPrefix(month);
 
   const monthTotal = (db
-    .prepare("SELECT COALESCE(SUM(amount_fen), 0) AS t FROM txn WHERE kind = 'expense' AND occurred_on >= ? AND occurred_on <= ?")
-    .get(`${month}-01`, `${month}-31`) as { t: number }).t;
+    .prepare("SELECT COALESCE(SUM(amount_fen), 0) AS t FROM txn WHERE kind = 'expense' AND user_id = ? AND occurred_on >= ? AND occurred_on <= ?")
+    .get(userId, `${month}-01`, `${month}-31`) as { t: number }).t;
   const prevTotal = (db
-    .prepare("SELECT COALESCE(SUM(amount_fen), 0) AS t FROM txn WHERE kind = 'expense' AND occurred_on >= ? AND occurred_on <= ?")
-    .get(`${prev}-01`, `${prev}-31`) as { t: number }).t;
+    .prepare("SELECT COALESCE(SUM(amount_fen), 0) AS t FROM txn WHERE kind = 'expense' AND user_id = ? AND occurred_on >= ? AND occurred_on <= ?")
+    .get(userId, `${prev}-01`, `${prev}-31`) as { t: number }).t;
   const incomeTotal = (db
-    .prepare("SELECT COALESCE(SUM(amount_fen), 0) AS t FROM txn WHERE kind = 'income' AND occurred_on >= ? AND occurred_on <= ?")
-    .get(`${month}-01`, `${month}-31`) as { t: number }).t;
+    .prepare("SELECT COALESCE(SUM(amount_fen), 0) AS t FROM txn WHERE kind = 'income' AND user_id = ? AND occurred_on >= ? AND occurred_on <= ?")
+    .get(userId, `${month}-01`, `${month}-31`) as { t: number }).t;
 
   const byCategory = db
     .prepare(
       `SELECT c.id AS category_id, c.name, c.icon, c.color,
               SUM(t.amount_fen) AS total_fen, COUNT(*) AS cnt
        FROM txn t JOIN category c ON c.id = t.category_id
-       WHERE t.kind = 'expense' AND t.occurred_on >= ? AND t.occurred_on <= ?
+       WHERE t.kind = 'expense' AND t.user_id = ? AND t.occurred_on >= ? AND t.occurred_on <= ?
        GROUP BY c.id ORDER BY total_fen DESC`,
     )
-    .all(`${month}-01`, `${month}-31`);
+    .all(userId, `${month}-01`, `${month}-31`);
 
   res.json({
     month,

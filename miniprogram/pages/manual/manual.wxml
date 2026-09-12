@@ -1,4 +1,6 @@
 <view class="page">
+  <view class="as-banner" wx:if="{{asMode}}">正在帮 {{asName}} 记账</view>
+
   <view class="kind-tabs">
     <view class="kind-tab {{kind === 'expense' ? 'kind-active' : ''}}" hover-class="tab-press" bindtap="setKind" data-kind="expense">支出</view>
     <view class="kind-tab {{kind === 'income' ? 'kind-active' : ''}}" hover-class="tab-press" bindtap="setKind" data-kind="income">收入</view>

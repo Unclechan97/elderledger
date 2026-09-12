@@ -79,9 +79,9 @@ Page({
     wx.navigateTo({ url: '/pages/list/list' });
   },
   onStatsTap() {
-    wx.showToast({ title: 'M5 上线：统计图表', icon: 'none' });
+    wx.showToast({ title: '统计图表，即将上线', icon: 'none' });
   },
   onFamilyTap() {
-    wx.showToast({ title: 'M5 上线：家人协同', icon: 'none' });
+    wx.navigateTo({ url: '/pages/family/family' });
   },
 });
