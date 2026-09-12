@@ -79,7 +79,7 @@ Page({
     wx.navigateTo({ url: '/pages/list/list' });
   },
   onStatsTap() {
-    wx.showToast({ title: '统计图表，即将上线', icon: 'none' });
+    wx.navigateTo({ url: '/pages/stats/stats' });
   },
   onFamilyTap() {
     wx.navigateTo({ url: '/pages/family/family' });

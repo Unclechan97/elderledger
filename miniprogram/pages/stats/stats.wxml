@@ -1,0 +1,31 @@
+<view class="page">
+  <view class="sum-card">
+    <view class="sum-label">本月支出</view>
+    <view class="sum-amount">¥ {{totalText}}</view>
+    <view class="sum-diff" wx:if="{{diffText}}">{{diffText}}</view>
+    <view class="sum-income" wx:if="{{hasIncome}}">本月收入 ¥ {{incomeText}}</view>
+  </view>
+
+  <view class="sec-label">钱花在哪儿</view>
+
+  <view wx:if="{{hasData}}">
+    <view class="cat-item" wx:for="{{rows}}" wx:key="category_id">
+      <view class="cat-icon">{{item.icon}}</view>
+      <view class="cat-main">
+        <view class="cat-line">
+          <text class="cat-name">{{item.name}}</text>
+          <text class="cat-cnt">{{item.cnt}} 笔</text>
+          <text class="cat-amount">¥ {{item.amountText}}</text>
+        </view>
+        <view class="bar-track">
+          <view class="bar-fill" style="width: {{item.barWidth}}%; background: {{item.color}};"></view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="empty" wx:else>
+    <view>本月还没记账</view>
+    <view class="empty-sub">先回首页记一笔吧</view>
+  </view>
+</view>
