@@ -1,0 +1,13 @@
+<view class="cc-mask" wx:if="{{visible}}" bindtap="onEdit">
+  <view class="cc-card" catchtap="noop">
+    <view class="cc-title">请确认这一笔</view>
+    <view class="cc-icon">{{icon}}</view>
+    <view class="cc-cat">{{categoryName}}</view>
+    <view class="cc-amount {{kind === 'income' ? 'cc-in' : ''}}">{{kind === 'income' ? '+' : ''}}¥ {{amountText}}</view>
+    <view class="cc-date">{{dateText}}</view>
+    <view class="cc-btns">
+      <view class="cc-btn cc-back" bindtap="onEdit">返回修改</view>
+      <view class="cc-btn cc-ok" bindtap="onConfirm">✅ 记好了</view>
+    </view>
+  </view>
+</view>

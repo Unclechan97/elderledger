@@ -1,0 +1,15 @@
+<view class="kb">
+  <view class="kb-row" wx:for="{{keys}}" wx:for-item="row" wx:for-index="ri" wx:key="ri">
+    <view
+      class="kb-key {{k === 'del' ? 'kb-fn' : ''}}"
+      wx:for="{{row}}"
+      wx:for-item="k"
+      wx:for-index="ki"
+      wx:key="ki"
+      hover-class="kb-press"
+      hover-stay-time="80"
+      bindtap="onKey"
+      data-key="{{k}}"
+    >{{k === 'del' ? '⌫' : k}}</view>
+  </view>
+</view>

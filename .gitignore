@@ -6,3 +6,4 @@ server/tts/__pycache__/
 dist/
 *.log
 .DS_Store
+project.private.config.json

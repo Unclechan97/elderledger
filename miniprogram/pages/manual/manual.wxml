@@ -1,0 +1,33 @@
+<view class="page">
+  <view class="kind-tabs">
+    <view class="kind-tab {{kind === 'expense' ? 'kind-active' : ''}}" hover-class="tab-press" bindtap="setKind" data-kind="expense">支出</view>
+    <view class="kind-tab {{kind === 'income' ? 'kind-active' : ''}}" hover-class="tab-press" bindtap="setKind" data-kind="income">收入</view>
+  </view>
+
+  <view class="amount-display">{{amount === '' ? '0' : amount}}<text class="amount-unit"> 元</text></view>
+
+  <view class="section-label">选分类</view>
+  <category-grid categories="{{currentCategories}}" selected-id="{{selectedCategoryId}}" bind:select="onSelectCategory" />
+
+  <view class="date-row">
+    <text class="date-label">日期</text>
+    <picker mode="date" value="{{occurredOn}}" end="{{today}}" bindchange="onDateChange">
+      <view class="date-value">{{dateLabel}} ▾</view>
+    </picker>
+  </view>
+
+  <big-keyboard bind:key="onKey" />
+
+  <view class="save-btn" hover-class="save-press" bindtap="onSaveTap">记 好 了</view>
+
+  <confirm-card
+    visible="{{confirmVisible}}"
+    kind="{{kind}}"
+    amount-fen="{{pendingFen}}"
+    category-name="{{selectedCategoryName}}"
+    icon="{{selectedCategoryIcon}}"
+    occurred-on="{{occurredOn}}"
+    bind:confirm="onConfirmSave"
+    bind:edit="onEditBack"
+  />
+</view>

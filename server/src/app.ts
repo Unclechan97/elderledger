@@ -1,6 +1,8 @@
 import express from 'express';
 import { config } from './config';
 import { categoriesRouter } from './routes/categories';
+import { transactionsRouter } from './routes/transactions';
+import { summaryRouter } from './routes/summary';
 import { asrRouter } from './routes/asr';
 import { ttsRouter } from './routes/tts';
 
@@ -12,6 +14,8 @@ app.get('/health', (_req, res) => {
 });
 
 app.use('/api/categories', categoriesRouter);
+app.use('/api/transactions', transactionsRouter);
+app.use('/api/summary', summaryRouter);
 app.use('/api/asr', asrRouter);
 app.use('/api/tts', ttsRouter);
 

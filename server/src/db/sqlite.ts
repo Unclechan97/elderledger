@@ -29,3 +29,8 @@ if (n === 0) {
   const ins = db.prepare('INSERT INTO category (name, icon, color, kind, sort) VALUES (?, ?, ?, ?, ?)');
   db.transaction(() => rows.forEach((r) => ins.run(...r)))();
 }
+
+// M1：本地开发阶段单一默认用户（免登录）；M2 接 code2Session 后按 openid 建/查用户
+const DEFAULT_OPENID = 'local-dev';
+db.prepare('INSERT OR IGNORE INTO user (openid, nickname) VALUES (?, ?)').run(DEFAULT_OPENID, '本机用户');
+export const DEFAULT_USER_ID = (db.prepare('SELECT id FROM user WHERE openid = ?').get(DEFAULT_OPENID) as { id: number }).id;

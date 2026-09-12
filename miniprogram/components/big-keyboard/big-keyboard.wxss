@@ -1,0 +1,32 @@
+.kb {
+  margin: 24rpx 0 8rpx;
+}
+
+.kb-row {
+  display: flex;
+  gap: 16rpx;
+  margin-bottom: 16rpx;
+}
+
+/* 键位 110rpx 高，触控远超 88rpx 下限 */
+.kb-key {
+  flex: 1;
+  height: 110rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #FFFFFF;
+  border: 2rpx solid #EADFD2;
+  border-radius: 16rpx;
+  font-size: 48rpx;
+  font-weight: 600;
+}
+
+.kb-fn {
+  background: #F5EEE4;
+}
+
+.kb-press {
+  background: #FFE3D6;
+  border-color: #FF7043;
+}

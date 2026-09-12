@@ -1,0 +1,94 @@
+.page {
+  padding: 24rpx 32rpx 48rpx;
+}
+
+.kind-tabs {
+  display: flex;
+  gap: 20rpx;
+  margin-bottom: 20rpx;
+}
+
+.kind-tab {
+  flex: 1;
+  height: 96rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #FFFFFF;
+  border: 2rpx solid #EADFD2;
+  border-radius: 20rpx;
+  font-size: 38rpx;
+  font-weight: 600;
+  box-sizing: border-box;
+}
+
+.kind-active {
+  background: #FF7043;
+  border-color: #FF7043;
+  color: #FFFFFF;
+}
+
+.tab-press {
+  opacity: 0.85;
+}
+
+/* 金额展示 ≥ 72rpx */
+.amount-display {
+  text-align: center;
+  font-size: 96rpx;
+  font-weight: 700;
+  color: #D84315;
+  padding: 20rpx 0 12rpx;
+}
+
+.amount-unit {
+  font-size: 40rpx;
+  font-weight: 500;
+  color: #8A8177;
+}
+
+.section-label {
+  margin: 8rpx 0 16rpx;
+  font-size: 32rpx;
+  color: #8A8177;
+}
+
+.date-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 96rpx;
+  margin-top: 20rpx;
+  background: #FFFFFF;
+  border: 2rpx solid #EADFD2;
+  border-radius: 20rpx;
+  padding: 0 32rpx;
+}
+
+.date-label {
+  font-size: 36rpx;
+  color: #8A8177;
+}
+
+.date-value {
+  font-size: 38rpx;
+  font-weight: 600;
+}
+
+.save-btn {
+  margin-top: 28rpx;
+  height: 128rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #FF7043;
+  border-radius: 24rpx;
+  color: #FFFFFF;
+  font-size: 44rpx;
+  font-weight: 700;
+  letter-spacing: 8rpx;
+}
+
+.save-press {
+  background: #F4511E;
+}

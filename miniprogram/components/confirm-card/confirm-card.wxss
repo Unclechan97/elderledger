@@ -1,0 +1,80 @@
+.cc-mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(40, 30, 20, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.cc-card {
+  width: 600rpx;
+  background: #FFF8F0;
+  border-radius: 32rpx;
+  padding: 44rpx 40rpx 40rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.cc-title {
+  font-size: 36rpx;
+  color: #8A8177;
+}
+
+.cc-icon {
+  margin-top: 20rpx;
+  font-size: 88rpx;
+}
+
+.cc-cat {
+  margin-top: 8rpx;
+  font-size: 44rpx;
+  font-weight: 600;
+}
+
+.cc-amount {
+  margin-top: 16rpx;
+  font-size: 84rpx;
+  font-weight: 700;
+  color: #D84315;
+}
+
+.cc-in {
+  color: #2E7D32;
+}
+
+.cc-date {
+  margin-top: 12rpx;
+  font-size: 32rpx;
+  color: #8A8177;
+}
+
+.cc-btns {
+  margin-top: 40rpx;
+  display: flex;
+  gap: 24rpx;
+  width: 100%;
+}
+
+.cc-btn {
+  flex: 1;
+  height: 104rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 20rpx;
+  font-size: 38rpx;
+  font-weight: 600;
+}
+
+.cc-back {
+  background: #F5EEE4;
+  color: #33302B;
+}
+
+.cc-ok {
+  background: #FF7043;
+  color: #FFFFFF;
+}

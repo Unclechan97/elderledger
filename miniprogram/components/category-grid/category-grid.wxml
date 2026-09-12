@@ -1,0 +1,14 @@
+<view class="cg">
+  <view
+    class="cg-item {{selectedId === item.id ? 'cg-active' : ''}}"
+    wx:for="{{categories}}"
+    wx:key="id"
+    hover-class="cg-press"
+    hover-stay-time="80"
+    bindtap="onTap"
+    data-id="{{item.id}}"
+  >
+    <text class="cg-icon">{{item.icon}}</text>
+    <text class="cg-name">{{item.name}}</text>
+  </view>
+</view>

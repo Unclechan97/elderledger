@@ -1,0 +1,125 @@
+.page {
+  padding: 24rpx 32rpx 48rpx;
+}
+
+.range-tabs {
+  display: flex;
+  gap: 20rpx;
+}
+
+.range-tab {
+  flex: 1;
+  height: 96rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #FFFFFF;
+  border: 2rpx solid #EADFD2;
+  border-radius: 20rpx;
+  font-size: 38rpx;
+  font-weight: 600;
+  box-sizing: border-box;
+}
+
+.range-active {
+  background: #FF7043;
+  border-color: #FF7043;
+  color: #FFFFFF;
+}
+
+.tab-press {
+  opacity: 0.85;
+}
+
+.sum-row {
+  display: flex;
+  justify-content: space-between;
+  margin: 24rpx 8rpx;
+  font-size: 34rpx;
+}
+
+.sum-out {
+  color: #D84315;
+  font-weight: 600;
+}
+
+.sum-in {
+  color: #2E7D32;
+  font-weight: 600;
+}
+
+.txn-item {
+  display: flex;
+  align-items: center;
+  background: #FFFFFF;
+  border: 2rpx solid #EADFD2;
+  border-radius: 20rpx;
+  padding: 20rpx 24rpx;
+  margin-bottom: 20rpx;
+}
+
+.txn-icon {
+  font-size: 56rpx;
+  margin-right: 20rpx;
+}
+
+.txn-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.txn-cat {
+  font-size: 38rpx;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.txn-date {
+  margin-top: 6rpx;
+  font-size: 28rpx;
+  color: #8A8177;
+}
+
+.txn-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.txn-amount {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #D84315;
+}
+
+.txn-amount-in {
+  color: #2E7D32;
+}
+
+/* 删除按钮 88rpx 触控目标 */
+.txn-del {
+  margin-top: 8rpx;
+  min-width: 88rpx;
+  height: 56rpx;
+  padding: 0 16rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+  color: #B0A69A;
+  background: #F5EEE4;
+  border-radius: 12rpx;
+}
+
+.del-press {
+  color: #D84315;
+}
+
+.empty {
+  text-align: center;
+  padding: 120rpx 0;
+  font-size: 36rpx;
+  color: #8A8177;
+}

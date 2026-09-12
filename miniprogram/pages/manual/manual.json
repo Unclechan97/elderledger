@@ -1,0 +1,8 @@
+{
+  "navigationBarTitleText": "记一笔",
+  "usingComponents": {
+    "big-keyboard": "../../components/big-keyboard/big-keyboard",
+    "category-grid": "../../components/category-grid/category-grid",
+    "confirm-card": "../../components/confirm-card/confirm-card"
+  }
+}
