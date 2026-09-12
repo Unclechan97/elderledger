@@ -24,6 +24,12 @@
   color: #D84315;
 }
 
+.summary-diff {
+  margin-top: 12rpx;
+  font-size: 36rpx;
+  color: #2E7D32;
+}
+
 /* 触控目标 ≥ 128rpx，按钮间距充分 */
 .big-btn {
   height: 128rpx;
@@ -42,6 +48,10 @@
   background: #FF7043;
   border-color: #FF7043;
   color: #FFFFFF;
+}
+
+.btn-press {
+  opacity: 0.85;
 }
 
 .hint {
@@ -82,4 +92,64 @@
 
 .nav-press {
   background: #FFE3D6;
+}
+
+/* 首次使用引导层 */
+.guide-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 248, 240, 0.97);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48rpx;
+}
+
+.guide-card {
+  width: 100%;
+  background: #FFFFFF;
+  border: 2rpx solid #EADFD2;
+  border-radius: 32rpx;
+  padding: 48rpx 40rpx;
+  box-sizing: border-box;
+}
+
+.guide-title {
+  text-align: center;
+  font-size: 44rpx;
+  font-weight: 700;
+  margin-bottom: 40rpx;
+}
+
+.guide-row {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 0;
+}
+
+.guide-icon {
+  font-size: 56rpx;
+  margin-right: 24rpx;
+}
+
+.guide-text {
+  font-size: 38rpx;
+  font-weight: 600;
+}
+
+.guide-btn {
+  margin-top: 44rpx;
+  height: 120rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #FF7043;
+  border-radius: 24rpx;
+  color: #FFFFFF;
+  font-size: 42rpx;
+  font-weight: 700;
 }

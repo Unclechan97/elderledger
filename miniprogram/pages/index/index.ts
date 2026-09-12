@@ -1,6 +1,8 @@
 import { getSummary } from '../../services/api';
 import { fenToYuanText } from '../../utils/money';
-import { isTtsEnabled, setTtsEnabled } from '../../services/tts';
+import { isTtsEnabled, setTtsEnabled, speak } from '../../services/tts';
+
+const GUIDE_KEY = 'guide_shown';
 
 Page({
   data: {
@@ -8,12 +10,33 @@ Page({
     totalText: '0.00',
     diffText: '',
     ttsOn: true,
+    showGuide: false,
   },
 
   onLoad() {
     const d = new Date();
     const week = ['日', '一', '二', '三', '四', '五', '六'][d.getDay()];
     this.setData({ dateText: `${d.getMonth() + 1}月${d.getDate()}日 周${week}` });
+    // 首次使用：引导层 + 语音讲解（只出现一次）
+    let firstTime = false;
+    try {
+      firstTime = wx.getStorageSync(GUIDE_KEY) !== true;
+    } catch {
+      /* 存储异常视为已看过，不阻塞 */
+    }
+    if (firstTime) {
+      this.setData({ showGuide: true });
+      void speak('欢迎使用银龄记账。按住话筒说话就能记账，也可以拍一张支付页面，或者手动按键输入。');
+    }
+  },
+
+  onGuideDone() {
+    try {
+      wx.setStorageSync(GUIDE_KEY, true);
+    } catch {
+      /* 下次再引导一次，无碍 */
+    }
+    this.setData({ showGuide: false });
   },
 
   onShow() {

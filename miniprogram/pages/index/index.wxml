@@ -1,4 +1,15 @@
 <view class="page">
+  <!-- 首次使用引导：一页大图 + 语音讲解（适老化原则 8） -->
+  <view class="guide-mask" wx:if="{{showGuide}}">
+    <view class="guide-card">
+      <view class="guide-title">欢迎使用银龄记账</view>
+      <view class="guide-row"><view class="guide-icon">🎤</view><view class="guide-text">按住说话，念出花销</view></view>
+      <view class="guide-row"><view class="guide-icon">📷</view><view class="guide-text">拍支付页面或小票</view></view>
+      <view class="guide-row"><view class="guide-icon">✋</view><view class="guide-text">也可以手动按键记录</view></view>
+      <view class="guide-btn" hover-class="btn-press" bindtap="onGuideDone">知道了，开始</view>
+    </view>
+  </view>
+
   <view class="header">
     <view class="date">{{dateText}}</view>
     <view class="summary-label">本月已花</view>

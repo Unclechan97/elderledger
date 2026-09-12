@@ -1,5 +1,6 @@
 import { getTransactions, deleteTransaction, TxnItem } from '../../services/api';
 import { fenToYuanText } from '../../utils/money';
+import { speak } from '../../services/tts';
 
 Page({
   data: {
@@ -38,6 +39,7 @@ Page({
     const id = Number(e.currentTarget.dataset.id);
     const item = this.data.items.find((it) => it.id === id);
     if (!item) return;
+    void speak('要删除这一笔吗？删了就找不回来了'); // 不可恢复操作前播报（适老化原则 6）
     wx.showModal({
       title: '删除这一笔？',
       content: `${item.category_icon} ${item.category_name} ¥${item.amountText}`,
@@ -48,6 +50,7 @@ Page({
         if (!r.confirm) return;
         try {
           await deleteTransaction(id);
+          void speak('已删除');
           wx.showToast({ title: '已删除', icon: 'none' });
           this.load();
         } catch (err) {
