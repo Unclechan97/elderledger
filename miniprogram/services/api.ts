@@ -42,7 +42,8 @@ export interface SummaryResp {
   prev_total_fen: number;
   diff_last_month_fen: number;
   income_total_fen: number;
-  by_category: Array<{ category_id: number; name: string; icon: string; color: string; total_fen: number; cnt: number }>;
+  by_expense_category: Array<{ category_id: number; name: string; icon: string; color: string; total_fen: number; cnt: number }>;
+  by_income_category: Array<{ category_id: number; name: string; icon: string; color: string; total_fen: number; cnt: number }>;
 }
 
 function request<T>(method: 'GET' | 'POST' | 'DELETE', url: string, data?: Record<string, unknown>): Promise<T> {

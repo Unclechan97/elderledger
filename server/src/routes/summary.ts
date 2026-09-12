@@ -5,7 +5,7 @@ import { resolveUserId, resolveViewUserId } from '../utils/context';
 
 export const summaryRouter = Router();
 
-/** GET /api/summary?period=month —— 首页大字汇总 + 月度分类占比（stats 页共用） */
+/** GET /api/summary?period=month —— 首页大字汇总 + 月度支出/收入分类占比（stats 页共用） */
 summaryRouter.get('/', (req, res) => {
   const selfId = resolveUserId(req);
   const userId = resolveViewUserId(req, selfId);
@@ -23,15 +23,16 @@ summaryRouter.get('/', (req, res) => {
     .prepare("SELECT COALESCE(SUM(amount_fen), 0) AS t FROM txn WHERE kind = 'income' AND user_id = ? AND occurred_on >= ? AND occurred_on <= ?")
     .get(userId, `${month}-01`, `${month}-31`) as { t: number }).t;
 
-  const byCategory = db
-    .prepare(
-      `SELECT c.id AS category_id, c.name, c.icon, c.color,
+  const byCategory = (kind: 'expense' | 'income') =>
+    db
+      .prepare(
+        `SELECT c.id AS category_id, c.name, c.icon, c.color,
               SUM(t.amount_fen) AS total_fen, COUNT(*) AS cnt
        FROM txn t JOIN category c ON c.id = t.category_id
-       WHERE t.kind = 'expense' AND t.user_id = ? AND t.occurred_on >= ? AND t.occurred_on <= ?
+       WHERE t.kind = ? AND t.user_id = ? AND t.occurred_on >= ? AND t.occurred_on <= ?
        GROUP BY c.id ORDER BY total_fen DESC`,
-    )
-    .all(userId, `${month}-01`, `${month}-31`);
+      )
+      .all(kind, userId, `${month}-01`, `${month}-31`);
 
   res.json({
     month,
@@ -39,6 +40,7 @@ summaryRouter.get('/', (req, res) => {
     prev_total_fen: prevTotal,
     diff_last_month_fen: monthTotal - prevTotal,
     income_total_fen: incomeTotal,
-    by_category: byCategory,
+    by_expense_category: byCategory('expense'),
+    by_income_category: byCategory('income'),
   });
 });

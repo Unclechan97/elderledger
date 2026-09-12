@@ -6,9 +6,9 @@
     <view class="sum-income" wx:if="{{hasIncome}}">本月收入 ¥ {{incomeText}}</view>
   </view>
 
-  <view class="sec-label">钱花在哪儿</view>
-
-  <view wx:if="{{hasData}}">
+  <!-- 支出排行 -->
+  <block wx:if="{{hasData}}">
+    <view class="sec-label">钱花在哪儿</view>
     <view class="cat-item" wx:for="{{rows}}" wx:key="category_id">
       <view class="cat-icon">{{item.icon}}</view>
       <view class="cat-main">
@@ -22,9 +22,27 @@
         </view>
       </view>
     </view>
-  </view>
+  </block>
 
-  <view class="empty" wx:else>
+  <!-- 收入排行 -->
+  <block wx:if="{{hasIncomeRows}}">
+    <view class="sec-label">钱从哪儿来</view>
+    <view class="cat-item" wx:for="{{incomeRows}}" wx:key="category_id">
+      <view class="cat-icon">{{item.icon}}</view>
+      <view class="cat-main">
+        <view class="cat-line">
+          <text class="cat-name">{{item.name}}</text>
+          <text class="cat-cnt">{{item.cnt}} 笔</text>
+          <text class="cat-amount cat-amount-in">¥ {{item.amountText}}</text>
+        </view>
+        <view class="bar-track">
+          <view class="bar-fill" style="width: {{item.barWidth}}%; background: {{item.color}};"></view>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <view class="empty" wx:if="{{!hasData && !hasIncomeRows}}">
     <view>本月还没记账</view>
     <view class="empty-sub">先回首页记一笔吧</view>
   </view>

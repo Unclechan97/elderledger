@@ -90,6 +90,10 @@
   color: #d84315;
 }
 
+.cat-amount-in {
+  color: #2e7d32;
+}
+
 .bar-track {
   height: 24rpx;
   background: #f5eee4;
