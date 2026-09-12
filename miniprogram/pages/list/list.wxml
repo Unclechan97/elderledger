@@ -24,5 +24,10 @@
       </view>
     </view>
     <view class="empty" wx:if="{{!items.length}}">{{range === 'today' ? '今天还没记账' : '本月还没记账'}}</view>
+    <view class="list-footer" wx:if="{{items.length}}">
+      <view wx:if="{{loadingMore}}" class="footer-text">加载中…</view>
+      <view wx:elif="{{hasMore}}" class="footer-text">上滑看更多</view>
+      <view wx:else class="footer-text">就这些了</view>
+    </view>
   </view>
 </view>

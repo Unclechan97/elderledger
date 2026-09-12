@@ -3,6 +3,8 @@ import { fenToYuanText } from '../../utils/money';
 import { speak } from '../../services/tts';
 import { getViewAsId, getViewAsName, clearViewAs } from '../../utils/identity';
 
+const PAGE_SIZE = 20;
+
 Page({
   data: {
     range: 'today' as 'today' | 'month',
@@ -11,6 +13,9 @@ Page({
     incomeText: '0.00',
     asMode: false,
     asName: '',
+    page: 1,
+    hasMore: false,
+    loadingMore: false,
   },
 
   onShow() {
@@ -39,10 +44,37 @@ Page({
         items: r.items.map((it) => ({ ...it, amountText: fenToYuanText(it.amount_fen) })),
         expenseText: fenToYuanText(r.expense_fen),
         incomeText: fenToYuanText(r.income_fen),
+        page: 1,
+        hasMore: r.items.length < r.total,
+        loadingMore: false,
       });
     } catch {
       wx.showToast({ title: '加载失败，请检查服务', icon: 'none' });
     }
+  },
+
+  /** 触底加载下一页并追加（老人零学习：滚就是了） */
+  async loadMore() {
+    if (this.data.loadingMore || !this.data.hasMore) return;
+    this.setData({ loadingMore: true });
+    try {
+      const next = this.data.page + 1;
+      const r = await getTransactions(this.data.range, next, PAGE_SIZE);
+      const more = r.items.map((it) => ({ ...it, amountText: fenToYuanText(it.amount_fen) }));
+      this.setData({
+        items: [...this.data.items, ...more],
+        page: next,
+        hasMore: this.data.items.length + more.length < r.total,
+        loadingMore: false,
+      });
+    } catch {
+      this.setData({ loadingMore: false });
+      wx.showToast({ title: '加载失败，上滑再试', icon: 'none' });
+    }
+  },
+
+  onReachBottom() {
+    void this.loadMore();
   },
 
   onDelete(e: WechatMiniprogram.TouchEvent) {

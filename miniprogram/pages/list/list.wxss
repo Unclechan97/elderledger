@@ -134,3 +134,14 @@
   font-size: 36rpx;
   color: #8A8177;
 }
+
+/* 触底加载状态：弱化呈现，不抢注意力 */
+.list-footer {
+  text-align: center;
+  padding: 24rpx 0 8rpx;
+}
+
+.footer-text {
+  font-size: 30rpx;
+  color: #B0A69A;
+}
