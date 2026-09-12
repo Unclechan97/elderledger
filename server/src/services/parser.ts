@@ -101,11 +101,12 @@ const CATEGORY_SYNONYMS: Array<{ name: string; kind: 'expense' | 'income'; re: R
   { name: '子女给', kind: 'income', re: /儿子|女儿|孩子|子女|孙子|孙女|外孙|闺女|小伙[子儿].{0,4}给|给[了的]\s*\d*块钱/ },
 ];
 
-/** 日期词 → 相对日期描述（路由层换算成具体日期） */
+/** 日期词 → 相对日期描述（路由层换算成具体日期）。注意"大前天"要先于"前天"判断 */
 export function extractDateOffset(text: string): number {
   if (/今天|今日/.test(text)) return 0;
   if (/昨天|昨日/.test(text)) return -1;
-  if (/前天/.test(text)) return -2;
+  if (/大前天|大前日/.test(text)) return -3;
+  if (/前天|前日/.test(text)) return -2;
   return 0; // 默认今天
 }
 

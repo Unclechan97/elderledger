@@ -8,7 +8,7 @@ const SYSTEM_PROMPT = `你是记账助手。从老人的口语账目描述中提
 - kind: "expense"(支出) 或 "income"(收入)
 - amount_fen: 金额（整数，单位分）。"十五块五"=1550，"两块五"=250，"三百"=30000
 - category: 从以下选一个最贴近的：吃饭买菜/医疗药品/水电日用/交通出行/人情往来/穿衣打扮/休闲娱乐/其他支出/退休金/子女给/其他收入
-- occurred_on_offset: 0=今天，-1=昨天，-2=前天（没提日期就是0）
+- occurred_on_offset: 0=今天，-1=昨天，-2=前天，-3=大前天（没提日期就是0）
 - note: 原文摘要（不超过20字）
 例子：
 "今天买菜花了十五块五" → {"kind":"expense","amount_fen":1550,"category":"吃饭买菜","occurred_on_offset":0,"note":"买菜"}
