@@ -52,7 +52,7 @@
   margin-top: 28rpx;
   max-width: 560rpx;
   text-align: center;
-  font-size: 32rpx;
+  font-size: 34rpx;
   color: #8A8177;
   line-height: 1.5;
 }

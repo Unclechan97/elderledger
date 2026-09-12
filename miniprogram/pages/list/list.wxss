@@ -78,7 +78,7 @@
 
 .txn-date {
   margin-top: 6rpx;
-  font-size: 28rpx;
+  font-size: 30rpx;
   color: #8A8177;
 }
 
@@ -98,16 +98,16 @@
   color: #2E7D32;
 }
 
-/* 删除按钮 88rpx 触控目标 */
+/* 删除按钮：次级操作触控目标 ≥72rpx，字号 ≥30rpx */
 .txn-del {
   margin-top: 8rpx;
-  min-width: 88rpx;
-  height: 56rpx;
+  min-width: 96rpx;
+  height: 72rpx;
   padding: 0 16rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 28rpx;
+  font-size: 30rpx;
   color: #B0A69A;
   background: #F5EEE4;
   border-radius: 12rpx;

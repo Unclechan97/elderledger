@@ -1,5 +1,6 @@
 import { getCategories, createTransaction, getSummary, Category } from '../../services/api';
 import { yuanStrToFen, fenToYuanText } from '../../utils/money';
+import { speak, stopSpeak } from '../../services/tts';
 
 function fmtDate(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -98,6 +99,9 @@ Page({
       return;
     }
     this.setData({ pendingFen: fen, confirmVisible: true });
+    // 适老化听觉确认：与语音/拍照页一致，念出来让老人核对
+    const kindWord = this.data.kind === 'income' ? '收入' : '支出';
+    void speak(`${kindWord} ${fenToYuanText(fen)} 元，${this.data.selectedCategoryName}，对吗？`);
   },
 
   async onConfirmSave() {
@@ -124,7 +128,13 @@ Page({
       this.setData({ confirmVisible: false, amount: '', pendingFen: 0, saving: false });
     } catch (err) {
       this.setData({ saving: false });
-      wx.showToast({ title: (err as Error).message || '保存失败', icon: 'none', duration: 2500 });
+      // 保存失败用大弹窗：toast 字小易错过
+      wx.showModal({
+        title: '没存上',
+        content: (err as Error).message || '保存失败，请再试一次',
+        showCancel: false,
+        confirmText: '知道了',
+      });
     }
   },
 
@@ -141,6 +151,7 @@ Page({
   },
 
   onEditBack() {
+    stopSpeak();
     this.setData({ confirmVisible: false });
   },
 });

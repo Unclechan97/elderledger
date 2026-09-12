@@ -37,6 +37,11 @@ Page({
     });
     rec.onStop((r) => {
       if (this.data.phase !== 'recording') return; // 已被取消/超时处理
+      // 防误触：点一下就松手是无效录音，引导按住说话
+      if (r.duration !== undefined && r.duration < 1000) {
+        this.setData({ phase: 'failed', failText: '按住圆钮说话，说完松开' });
+        return;
+      }
       this.recognize(r.tempFilePath);
     });
     rec.onError(() => {

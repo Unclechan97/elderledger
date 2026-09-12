@@ -76,7 +76,7 @@
 
 .nav-text {
   margin-top: 6rpx;
-  font-size: 28rpx;
+  font-size: 30rpx;
   font-weight: 600;
 }
 
