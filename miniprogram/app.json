@@ -1,5 +1,5 @@
 {
-  "pages": ["pages/index/index", "pages/voice/voice", "pages/manual/manual", "pages/list/list"],
+  "pages": ["pages/index/index", "pages/voice/voice", "pages/photo/photo", "pages/manual/manual", "pages/list/list"],
   "window": {
     "navigationBarTitleText": "银龄记账",
     "navigationBarBackgroundColor": "#FFF8F0",

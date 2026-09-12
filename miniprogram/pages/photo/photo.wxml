@@ -1,0 +1,32 @@
+<view class="page">
+  <view class="pick-area" wx:if="{{phase === 'idle'}}">
+    <view class="pick-hint">拍一张支付成功的页面，或者小票</view>
+    <view class="pick-btn" hover-class="pick-press" bindtap="chooseFromCamera">📷 拍 一 张</view>
+    <view class="pick-btn" hover-class="pick-press" bindtap="chooseFromAlbum">🖼 从 相 册 选</view>
+  </view>
+
+  <view class="working-area" wx:if="{{phase === 'working'}}">
+    <image class="preview" src="{{photoPath}}" mode="aspectFit" />
+    <view class="working-text">🔍 正在看清这张图…</view>
+  </view>
+
+  <view class="result-area" wx:if="{{phase === 'parsed'}}">
+    <image class="preview-small" src="{{photoPath}}" mode="aspectFit" />
+    <view class="result-line">💰 {{amountText}} 元</view>
+    <view class="result-line"> {{categoryIcon}} {{categoryName}}</view>
+    <view class="result-line">📅 {{dateLabel}}</view>
+    <view class="btn-row">
+      <view class="btn retry" hover-class="btn-press" bindtap="onRetry">重 新 选</view>
+      <view class="btn ok" hover-class="btn-press" bindtap="onConfirmSave">对，记好</view>
+    </view>
+  </view>
+
+  <view class="fail-area" wx:if="{{phase === 'failed'}}">
+    <view class="fail-emoji">🤔</view>
+    <view class="fail-text">{{failText}}</view>
+    <view class="btn-row">
+      <view class="btn retry" hover-class="btn-press" bindtap="onRetry">再拍一次</view>
+      <view class="btn ok" hover-class="btn-press" bindtap="onManualFallback">手动记</view>
+    </view>
+  </view>
+</view>

@@ -104,15 +104,24 @@ export function parseText(text: string): Promise<ParseResult> {
 
 /** 录音文件上传转写（multipart，字段名 audio） */
 export function uploadAsr(filePath: string): Promise<{ text: string }> {
+  return uploadFileAs<{ text: string }>(filePath, 'audio', '/api/asr');
+}
+
+/** 图片上传解析（multipart，字段名 image）→ GLM-4V 结构化记账信息 */
+export function parseImage(filePath: string): Promise<ParseResult> {
+  return uploadFileAs<ParseResult>(filePath, 'image', '/api/parse/image');
+}
+
+function uploadFileAs<T>(filePath: string, name: string, url: string): Promise<T> {
   return new Promise((resolve, reject) => {
     wx.uploadFile({
-      url: `${BASE_URL}/api/asr`,
+      url: `${BASE_URL}${url}`,
       filePath,
-      name: 'audio',
+      name,
       success: (r) => {
         try {
-          const data = JSON.parse(r.data) as { text?: string; error?: string };
-          if (r.statusCode < 400) resolve({ text: data.text ?? '' });
+          const data = JSON.parse(r.data) as T & { error?: string };
+          if (r.statusCode < 400) resolve(data);
           else reject(new Error(data.error || `HTTP ${r.statusCode}`));
         } catch {
           reject(new Error(`响应不是 JSON（HTTP ${r.statusCode}）`));

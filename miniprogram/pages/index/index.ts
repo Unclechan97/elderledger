@@ -36,7 +36,7 @@ Page({
     wx.navigateTo({ url: '/pages/voice/voice' });
   },
   onPhotoTap() {
-    wx.showToast({ title: 'M3 上线：拍照记账', icon: 'none' });
+    wx.navigateTo({ url: '/pages/photo/photo' });
   },
   onManualTap() {
     wx.navigateTo({ url: '/pages/manual/manual' });

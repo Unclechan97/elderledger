@@ -1,9 +1,13 @@
 // POST /api/parse/text —— 语音/文字记账解析：LLM 优先（配了 key 才启用），正则兜底
+// POST /api/parse/image —— 拍照/截图解析（GLM-4V-Flash）
 import { Router } from 'express';
+import multer from 'multer';
 import { db } from '../db/sqlite';
 import { localDateStr } from '../utils/dates';
 import { regexParse, ParsedTxn } from '../services/parser';
-import { llmParseText, llmAvailable } from '../services/llm';
+import { llmParseText, llmParseImage, llmAvailable } from '../services/llm';
+
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 
 export const parseRouter = Router();
 
@@ -72,4 +76,45 @@ parseRouter.post('/text', async (req, res) => {
     confidence: Math.min(parsed.confidence, 0.85),
     parser: parsed.parser,
   });
+});
+
+// 图片解析：multer 收图 → base64 → GLM-4V-Flash → 结构化
+parseRouter.post('/image', upload.single('image'), async (req, res) => {
+  const file = req.file;
+  if (!file) return res.status(400).json({ error: '缺少图片（字段名 image）' });
+
+  const today = localDateStr();
+  const fallback = {
+    kind: null,
+    amount_fen: 0,
+    category_id: null,
+    occurred_on: today,
+    note: '',
+    confidence: 0,
+    parser: 'none',
+    message: '没看清这张图，请拍清楚金额，或者手动输入',
+  };
+
+  if (!llmAvailable()) {
+    return res.json({ ...fallback, message: '图片识别未配置（缺少 ZHIPU_API_KEY），请手动输入' });
+  }
+
+  try {
+    const r = await llmParseImage(file.buffer.toString('base64'), file.mimetype || 'image/jpeg');
+    if (!r.found) return res.json(fallback);
+    const cat = categoryByName(r.category, r.kind) ?? categoryByName(r.kind === 'expense' ? '其他支出' : '其他收入', r.kind);
+    if (!cat) return res.json(fallback);
+    return res.json({
+      kind: r.kind,
+      amount_fen: r.amount_fen,
+      category_id: cat.id,
+      occurred_on: today, // 支付截图默认记当天；小票历史日期 M4 实测后再放开
+      note: r.note || '',
+      confidence: 0.9,
+      parser: 'glm4v',
+    });
+  } catch (err) {
+    console.warn('[parse/image] GLM-4V 失败:', (err as Error).message);
+    return res.json(fallback);
+  }
 });
