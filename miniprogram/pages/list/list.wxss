@@ -87,10 +87,24 @@
   text-overflow: ellipsis;
 }
 
+/* 语音原话：完整换行展示（入库时截 100 字兜底行高），不搞点击展开——老人不猜交互 */
+.txn-note {
+  margin-top: 6rpx;
+  font-size: 30rpx;
+  font-weight: 400;
+  color: #8A8177;
+  word-break: break-all;
+}
+
 .txn-date {
   margin-top: 6rpx;
   font-size: 30rpx;
   color: #8A8177;
+}
+
+/* 家人代记标识：与代看横幅同色系，语义一致 */
+.txn-family {
+  color: #1565C0;
 }
 
 .txn-side {

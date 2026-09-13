@@ -129,7 +129,7 @@ Page({
       amount_fen: this.parsed.amount_fen,
       category_id: this.parsed.category_id,
       occurred_on: this.parsed.occurred_on,
-      note: this.data.recognizedText.slice(0, 50),
+      note: this.data.recognizedText.slice(0, 100), // 原话入账（明细页备注行完整展示，100 字兜底超长闲聊）
       source: 'voice',
       confidence: this.parsed.confidence,
     })

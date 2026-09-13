@@ -15,8 +15,10 @@
     <view class="txn-item" wx:for="{{items}}" wx:key="id">
       <view class="txn-icon">{{item.category_icon}}</view>
       <view class="txn-main">
-        <view class="txn-cat">{{item.category_name}}{{item.note ? ' · ' + item.note : ''}}</view>
-        <view class="txn-date">{{item.occurred_on}}</view>
+        <view class="txn-cat">{{item.category_name}}</view>
+        <!-- 备注（语音原话）独立成行：完整可见，不与分类争一行 -->
+        <view class="txn-note" wx:if="{{item.note}}">{{item.note}}</view>
+        <view class="txn-date">{{item.occurred_on}}<text wx:if="{{item.source === 'family'}}" class="txn-family"> · {{asMode ? '我记的' : '家人记的'}}</text></view>
       </view>
       <view class="txn-side">
         <view class="txn-amount {{item.kind === 'income' ? 'txn-amount-in' : ''}}">{{item.kind === 'income' ? '+' : '-'}}¥ {{item.amountText}}</view>
