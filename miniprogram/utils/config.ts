@@ -6,7 +6,7 @@
 export const API_MODE: 'cloud' | 'local' = 'cloud';
 
 /** 云托管环境ID（云托管控制台-概况 里复制） */
-export const CLOUD_ENV = 'FILL-ENV-ID';
+export const CLOUD_ENV = 'elderledger-app-d7fv0hsub61bda15';
 
 /** 本地服务地址（API_MODE=local 时用；真机预览改电脑局域网 IP，如 http://192.168.1.5:3000） */
 export const BASE_URL = 'http://127.0.0.1:3000';
