@@ -164,9 +164,9 @@ function uploadFileAs<T>(filePath: string, name: string, url: string): Promise<T
       header: identityHeaders(),
       success: (r) => {
         try {
-          const data = JSON.parse(r.data) as T & { error?: string };
+          const data = JSON.parse(r.data) as T & { error?: string; detail?: string };
           if (r.statusCode < 400) resolve(data);
-          else reject(new Error(data.error || `HTTP ${r.statusCode}`));
+          else reject(new Error([data.error, data.detail].filter(Boolean).join('｜') || `HTTP ${r.statusCode}`));
         } catch {
           reject(new Error(`响应不是 JSON（HTTP ${r.statusCode}）`));
         }

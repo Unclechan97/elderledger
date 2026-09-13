@@ -58,8 +58,9 @@ Page({
     if (this.data.saving) return;
     stopSpeak();
     this.recorder?.start({
-      format: 'wav',
+      format: 'mp3', // 模拟器不支持 wav（仅真机），mp3 模拟器+真机都支持；服务端统一转 16k wav
       sampleRate: 16000,
+      encodeBitRate: 96000, // 16k 采样率允许的上限（官方对照表 24000~96000），清晰度优先
       numberOfChannels: 1,
       duration: 60000, // 上限 60s 自动停
     });
