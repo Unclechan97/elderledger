@@ -5,8 +5,12 @@ export const config = {
   dataDir: process.env.DATA_DIR || './data',
   /** Docker 内用服务名 ws://asr:10095；宿主机直跑用 ws://127.0.0.1:10095 */
   asrHost: process.env.ASR_HOST || 'ws://127.0.0.1:10095',
-  /** 语音识别实现：funasr（本地 Docker）；将来可换云 API 或 sherpa-onnx（services/asr/ 加实现） */
+  /** 语音识别实现：funasr（本地 Docker）| tencent（腾讯云一句话识别，5000 次/月免费） */
   asrProvider: process.env.ASR_PROVIDER || 'funasr',
+  /** 腾讯云 ASR 密钥（ASR_PROVIDER=tencent 时必填） */
+  tencentSecretId: process.env.TENCENT_SECRET_ID || '',
+  tencentSecretKey: process.env.TENCENT_SECRET_KEY || '',
+  tencentAsrRegion: process.env.TENCENT_ASR_REGION || 'ap-guangzhou',
   ttsUrl: process.env.TTS_URL || 'http://127.0.0.1:55001',
   zhipuApiKey: process.env.ZHIPU_API_KEY || '',
   llmProvider: process.env.LLM_PROVIDER || 'zhipu',

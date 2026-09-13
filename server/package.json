@@ -12,6 +12,7 @@
     "dotenv": "^16.4.5",
     "express": "^5.1.0",
     "multer": "^2.0.1",
+    "tencentcloud-sdk-nodejs-asr": "*",
     "tsx": "^4.19.0",
     "ws": "^8.18.0"
   },
