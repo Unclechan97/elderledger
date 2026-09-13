@@ -1,4 +1,4 @@
-import { BASE_URL } from '../utils/config';
+import { BASE_URL, API_MODE, CLOUD_ENV } from '../utils/config';
 import { identityHeaders } from '../utils/identity';
 
 export interface Category {
@@ -46,16 +46,42 @@ export interface SummaryResp {
   by_income_category: Array<{ category_id: number; name: string; icon: string; color: string; total_fen: number; cnt: number }>;
 }
 
+function httpError(data: unknown, statusCode: number): Error {
+  const d = data as { error?: string; detail?: string } | undefined;
+  const msg = [d?.error, d?.detail].filter(Boolean).join('｜');
+  return new Error(msg || `HTTP ${statusCode}`);
+}
+
+/** 云托管通道：callContainer（免域名免备案，自动注入 x-wx-openid 身份） */
+function cloudRequest<T>(method: string, path: string, data?: unknown, header?: Record<string, string>): Promise<T> {
+  return new Promise((resolve, reject) => {
+    wx.cloud.callContainer({
+      config: { env: CLOUD_ENV },
+      path,
+      method: method as 'GET',
+      header: header || {},
+      data,
+      success: (r) => {
+        if (r.statusCode < 400) resolve(r.data as T);
+        else reject(httpError(r.data, r.statusCode));
+      },
+      fail: (e) => reject(new Error(e.errMsg || '云调用失败，请检查网络')),
+    });
+  });
+}
+
 function request<T>(method: 'GET' | 'POST' | 'DELETE', url: string, data?: Record<string, unknown>): Promise<T> {
+  const header = identityHeaders();
+  if (API_MODE === 'cloud') return cloudRequest<T>(method, url, data, header);
   return new Promise((resolve, reject) => {
     wx.request({
       url: `${BASE_URL}${url}`,
       method,
       data,
-      header: identityHeaders(),
+      header,
       success: (r) => {
         if (r.statusCode < 400) resolve(r.data as T);
-        else reject(new Error((r.data as { error?: string })?.error || `HTTP ${r.statusCode}`));
+        else reject(httpError(r.data, r.statusCode));
       },
       fail: (e) => reject(new Error(e.errMsg || '网络错误')),
     });
@@ -150,28 +176,87 @@ export function getElders(): Promise<{ elders: ElderSummary[] }> {
   return request<{ elders: ElderSummary[] }>('GET', '/api/family/elders');
 }
 
-/** CSV 导出下载地址（wx.downloadFile 用，header 单独传 identityHeaders()） */
-export function exportCsvUrl(month: string): string {
-  return `${BASE_URL}/api/export/csv?month=${month}`;
-}
-
-function uploadFileAs<T>(filePath: string, name: string, url: string): Promise<T> {
-  return new Promise((resolve, reject) => {
-    wx.uploadFile({
-      url: `${BASE_URL}${url}`,
+/** CSV 导出 → 返回本地文件路径（local: downloadFile；cloud: 文本响应写临时文件） */
+export async function getExportCsv(month: string): Promise<string> {
+  if (API_MODE === 'local') {
+    return new Promise((resolve, reject) => {
+      wx.downloadFile({
+        url: `${BASE_URL}/api/export/csv?month=${month}`,
+        header: identityHeaders(),
+        success: (r) => {
+          if (r.statusCode < 400) resolve(r.tempFilePath);
+          else reject(new Error(`HTTP ${r.statusCode}`));
+        },
+        fail: (e) => reject(new Error(e.errMsg || '下载失败')),
+      });
+    });
+  }
+  const csv = await request<string>('GET', `/api/export/csv?month=${month}`);
+  const filePath = `${wx.env.USER_DATA_PATH}/bill-${month}.csv`;
+  await new Promise<void>((resolve, reject) => {
+    wx.getFileSystemManager().writeFile({
       filePath,
-      name,
-      header: identityHeaders(),
-      success: (r) => {
-        try {
-          const data = JSON.parse(r.data) as T & { error?: string; detail?: string };
-          if (r.statusCode < 400) resolve(data);
-          else reject(new Error([data.error, data.detail].filter(Boolean).join('｜') || `HTTP ${r.statusCode}`));
-        } catch {
-          reject(new Error(`响应不是 JSON（HTTP ${r.statusCode}）`));
-        }
-      },
-      fail: (e) => reject(new Error(e.errMsg || '上传失败')),
+      data: csv,
+      encoding: 'utf8',
+      success: () => resolve(),
+      fail: (e) => reject(new Error(e.errMsg || '写文件失败')),
     });
   });
+  return filePath;
+}
+
+/** 家人解除绑定（角色回老人；也用于云端调试切回身份） */
+export function unbindFamily(): Promise<{ ok: boolean }> {
+  return request<{ ok: boolean }>('POST', '/api/family/unbind', {});
+}
+
+/** 语音播报音频（base64，两条通道同一形状） */
+export function getTtsAudio(text: string): Promise<{ audio_base64: string }> {
+  return request<{ audio_base64: string }>('POST', '/api/tts', { text });
+}
+
+function readFileBase64(filePath: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    wx.getFileSystemManager().readFile({
+      filePath,
+      encoding: 'base64',
+      success: (r) => resolve(String(r.data)),
+      fail: (e) => reject(new Error(e.errMsg || '读文件失败')),
+    });
+  });
+}
+
+function guessMime(name: string, filePath: string): string {
+  const p = filePath.toLowerCase();
+  if (name === 'audio') return p.endsWith('.wav') ? 'audio/wav' : 'audio/mpeg';
+  return p.endsWith('.png') ? 'image/png' : 'image/jpeg';
+}
+
+/**
+ * 文件上传：local 走 wx.uploadFile（multipart）；cloud 走 callContainer JSON base64
+ * （callContainer 不支持 multipart，服务端两条通道都收）
+ */
+async function uploadFileAs<T>(filePath: string, name: string, url: string): Promise<T> {
+  if (API_MODE === 'local') {
+    return new Promise<T>((resolve, reject) => {
+      wx.uploadFile({
+        url: `${BASE_URL}${url}`,
+        filePath,
+        name,
+        header: identityHeaders(),
+        success: (r) => {
+          try {
+            const data = JSON.parse(r.data) as T & { error?: string; detail?: string };
+            if (r.statusCode < 400) resolve(data);
+            else reject(new Error([data.error, data.detail].filter(Boolean).join('｜') || `HTTP ${r.statusCode}`));
+          } catch {
+            reject(new Error(`响应不是 JSON（HTTP ${r.statusCode}）`));
+          }
+        },
+        fail: (e) => reject(new Error(e.errMsg || '上传失败')),
+      });
+    });
+  }
+  const b64 = await readFileBase64(filePath);
+  return request<T>('POST', url, { [`${name}_base64`]: b64, mime: guessMime(name, filePath) });
 }

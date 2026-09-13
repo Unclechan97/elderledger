@@ -80,10 +80,21 @@ parseRouter.post('/text', async (req, res) => {
   return res.json(failResp);
 });
 
-// 图片解析：multer 收图 → base64 → GLM-4V-Flash → 结构化
+// 图片解析：multipart 收图（本地）或 JSON base64（云端 callContainer）→ GLM-4V-Flash → 结构化
 parseRouter.post('/image', upload.single('image'), async (req, res) => {
-  const file = req.file;
-  if (!file) return res.status(400).json({ error: '缺少图片（字段名 image）' });
+  let imageB64 = '';
+  let mime = 'image/jpeg';
+  if (req.file) {
+    imageB64 = req.file.buffer.toString('base64');
+    mime = req.file.mimetype || mime;
+  } else {
+    const b64 = String((req.body as { image_base64?: string })?.image_base64 || '');
+    if (b64) {
+      imageB64 = b64;
+      mime = String((req.body as { mime?: string })?.mime || mime);
+    }
+  }
+  if (!imageB64) return res.status(400).json({ error: '缺少图片（字段名 image 或 JSON image_base64）' });
 
   const today = localDateStr();
   const fallback = {
@@ -102,7 +113,7 @@ parseRouter.post('/image', upload.single('image'), async (req, res) => {
   }
 
   try {
-    const r = await llmParseImage(file.buffer.toString('base64'), file.mimetype || 'image/jpeg');
+    const r = await llmParseImage(imageB64, mime);
     if (!r.found) return res.json(fallback);
     const cat = categoryByName(r.category, r.kind) ?? categoryByName(r.kind === 'expense' ? '其他支出' : '其他收入', r.kind);
     if (!cat) return res.json(fallback);

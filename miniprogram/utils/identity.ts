@@ -1,5 +1,6 @@
-// 本地开发阶段的身份模拟：storage 存"我是谁"和"我在代看谁"
-// 上线后 X-User-Id 换成 code2Session 解出的用户（服务端会话），接口只认请求头，形状不变
+// 身份：storage 存"我是谁"（本地模拟）和"我在代看谁"（家人代看，云端本地都用）
+import { API_MODE } from './config';
+
 const KEY_USER = 'user_id';
 const KEY_VIEW_AS = 'view_as_id';
 const KEY_VIEW_NAME = 'view_as_name';
@@ -50,11 +51,13 @@ export function clearViewAs(): void {
   set(KEY_VIEW_NAME, '');
 }
 
-/** 统一请求头：request / uploadFile / downloadFile 都带上 */
+/** 统一请求头：本地模拟 X-User-Id；云端身份由 callContainer 注入的 openid 决定，只传代看视角 */
 export function identityHeaders(): Record<string, string> {
   const h: Record<string, string> = {};
-  const uid = getUserId();
-  if (uid) h['X-User-Id'] = uid;
+  if (API_MODE === 'local') {
+    const uid = getUserId();
+    if (uid) h['X-User-Id'] = uid;
+  }
   const vid = getViewAsId();
   if (vid) h['X-View-As'] = vid;
   return h;

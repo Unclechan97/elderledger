@@ -10,7 +10,8 @@ import { familyRouter } from './routes/family';
 import { exportRouter } from './routes/export';
 
 const app = express();
-app.use(express.json({ limit: '1mb' }));
+// 3mb：云端 callContainer 不支持 multipart，音频/图片以 base64 JSON 上行（60s 录音 ≈1MB）
+app.use(express.json({ limit: '3mb' }));
 
 app.get('/health', (_req, res) => {
   res.json({ ok: true, ts: Date.now() });

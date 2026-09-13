@@ -53,16 +53,40 @@ familyRouter.post('/bind', (req, res) => {
     | undefined;
   if (!elder) return res.status(404).json({ error: '邀请码无效，请让老人重新生成' });
 
-  // 本地开发：家人身份也是模拟的（一个绑定一个家人用户）；上线后此处由 openid 建/查
-  const openid = `family-${elder.id}-${Date.now()}`;
-  const info = db
-    .prepare('INSERT INTO user (openid, nickname, role, family_of) VALUES (?, ?, ?, ?)')
-    .run(openid, '家人', 'family', elder.id);
+  // 云端：callContainer 注入真实 openid → 找/建调用者并绑为该老人的家人
+  // 本地开发：无 openid，合成 openid 模拟（一个绑定一个家人用户）
+  const openid = req.header('x-wx-openid');
+  let familyUserId: number;
+  if (openid) {
+    const exist = db.prepare('SELECT id FROM user WHERE openid = ?').get(openid) as { id: number } | undefined;
+    if (exist) {
+      db.prepare("UPDATE user SET role = 'family', family_of = ? WHERE id = ?").run(elder.id, exist.id);
+      familyUserId = exist.id;
+    } else {
+      const info = db
+        .prepare('INSERT INTO user (openid, nickname, role, family_of) VALUES (?, ?, ?, ?)')
+        .run(openid, '家人', 'family', elder.id);
+      familyUserId = Number(info.lastInsertRowid);
+    }
+  } else {
+    const info = db
+      .prepare('INSERT INTO user (openid, nickname, role, family_of) VALUES (?, ?, ?, ?)')
+      .run(`family-${elder.id}-${Date.now()}`, '家人', 'family', elder.id);
+    familyUserId = Number(info.lastInsertRowid);
+  }
 
   res.status(201).json({
-    family_user_id: info.lastInsertRowid,
+    family_user_id: familyUserId,
     elder: { id: elder.id, nickname: elder.nickname },
   });
+});
+
+/** POST /api/family/unbind —— 家人解除绑定（角色回老人；也用于云端调试切回身份） */
+familyRouter.post('/unbind', (req, res) => {
+  const selfId = resolveUserId(req);
+  const info = db.prepare("UPDATE user SET role = 'elder', family_of = NULL WHERE id = ? AND role = 'family'").run(selfId);
+  if (info.changes === 0) return res.status(400).json({ error: '当前不是家人身份' });
+  res.json({ ok: true });
 });
 
 /** GET /api/family/elders —— 家人视角：已绑老人 + 本月汇总 */

@@ -1,9 +1,9 @@
 // M5 家人协同页：老人出示邀请码 / 家人绑定后看汇总、看明细、代记、导出
-import { getMe, createInvite, bindFamily, getElders, exportCsvUrl, MeResp } from '../../services/api';
+import { getMe, createInvite, bindFamily, getElders, getExportCsv, unbindFamily, MeResp } from '../../services/api';
 import { fenToYuanText } from '../../utils/money';
-import { setUserId, setViewAs, clearViewAs, identityHeaders } from '../../utils/identity';
+import { setUserId, setViewAs, clearViewAs } from '../../utils/identity';
 import { speak } from '../../services/tts';
-import { BASE_URL } from '../../utils/config';
+import { API_MODE } from '../../utils/config';
 
 Page({
   data: {
@@ -118,40 +118,39 @@ Page({
   },
 
   /** 导出本月 CSV → 微信文件转发 */
-  onExport() {
+  async onExport() {
     const d = new Date();
     const month = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
     const elder = this.boundElder;
     if (elder) setViewAs(String(elder.id), elder.nickname);
     wx.showLoading({ title: '正在导出' });
-    wx.downloadFile({
-      url: exportCsvUrl(month),
-      header: identityHeaders(),
-      success: (r) => {
-        wx.hideLoading();
-        if (r.statusCode >= 400) {
-          wx.showToast({ title: '导出失败', icon: 'none' });
-          return;
-        }
-        wx.shareFileMessage({
-          filePath: r.tempFilePath,
-          fileName: `银龄账单-${month}.csv`,
-          success: () => wx.showToast({ title: '已转发', icon: 'none' }),
-          fail: () => wx.showToast({ title: '文件已下载，可在微信聊天里发送', icon: 'none' }),
-        });
-      },
-      fail: () => {
-        wx.hideLoading();
-        wx.showToast({ title: `下载失败，请确认服务 ${BASE_URL} 可达`, icon: 'none', duration: 3000 });
-      },
-      complete: () => {
-        if (elder) clearViewAs();
-      },
-    });
+    try {
+      const filePath = await getExportCsv(month);
+      wx.hideLoading();
+      wx.shareFileMessage({
+        filePath,
+        fileName: `银龄账单-${month}.csv`,
+        success: () => wx.showToast({ title: '已转发', icon: 'none' }),
+        fail: () => wx.showToast({ title: '文件已保存，可在微信聊天里发送', icon: 'none' }),
+      });
+    } catch {
+      wx.hideLoading();
+      wx.showToast({ title: '导出失败，请检查网络', icon: 'none' });
+    } finally {
+      if (elder) clearViewAs();
+    }
   },
 
-  /** 调试：本机切回老人身份（上线后身份来自 openid，无此入口） */
-  onBackToElder() {
+  /** 调试：切回老人身份。云端=解绑角色（openid 身份回老人）；本地=清空模拟用户 */
+  async onBackToElder() {
+    if (API_MODE === 'cloud') {
+      try {
+        await unbindFamily();
+      } catch (err) {
+        wx.showToast({ title: (err as Error).message || '切换失败', icon: 'none' });
+        return;
+      }
+    }
     setUserId('');
     clearViewAs();
     this.boundElder = null;

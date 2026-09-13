@@ -1,7 +1,12 @@
 /**
- * 服务端地址。
- * - 开发者工具：http://127.0.0.1:3000 即可（需在详情→本地设置勾选"不校验合法域名"，项目已默认关闭）
- * - 真机预览：改成电脑的局域网 IP，如 http://192.168.1.5:3000（手机与电脑须同一 WiFi）
+ * API 通道开关：
+ * - 'cloud'：微信云托管（体验版/正式版用）。callContainer 免域名免备案，自动注入 openid 身份
+ * - 'local'：本地 Docker（开发调试用）。X-User-Id 模拟身份，需在详情→本地设置勾选"不校验合法域名"
  */
-export const BASE_URL = 'http://192.168.1.101:3000';
+export const API_MODE: 'cloud' | 'local' = 'cloud';
 
+/** 云托管环境ID（云托管控制台-概况 里复制） */
+export const CLOUD_ENV = 'FILL-ENV-ID';
+
+/** 本地服务地址（API_MODE=local 时用；真机预览改电脑局域网 IP，如 http://192.168.1.5:3000） */
+export const BASE_URL = 'http://127.0.0.1:3000';

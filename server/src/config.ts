@@ -11,7 +11,8 @@ export const config = {
   tencentSecretId: process.env.TENCENT_SECRET_ID || '',
   tencentSecretKey: process.env.TENCENT_SECRET_KEY || '',
   tencentAsrRegion: process.env.TENCENT_ASR_REGION || 'ap-guangzhou',
-  ttsUrl: process.env.TTS_URL || 'http://127.0.0.1:55001',
+  /** 语音播报实现：tencent（腾讯云基础音色，与 ASR 同密钥） */
+  ttsProvider: process.env.TTS_PROVIDER || 'tencent',
   zhipuApiKey: process.env.ZHIPU_API_KEY || '',
   llmProvider: process.env.LLM_PROVIDER || 'zhipu',
 };
