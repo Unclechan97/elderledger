@@ -15,9 +15,10 @@ export const config = {
   ttsProvider: process.env.TTS_PROVIDER || 'tencent',
   zhipuApiKey: process.env.ZHIPU_API_KEY || '',
   llmProvider: process.env.LLM_PROVIDER || 'zhipu',
-  /** MySQL：云端填云托管内网地址；本地填 compose 服务名 mysql */
-  mysqlHost: process.env.MYSQL_HOST || '127.0.0.1',
-  mysqlPort: Number(process.env.MYSQL_PORT || 3306),
+  /** MySQL：云端填云托管内网地址；本地填 compose 服务名 mysql。
+   *  兼容把控制台 "host:port" 整串贴进 MYSQL_HOST 的情况（冒号后作为端口） */
+  mysqlHost: (process.env.MYSQL_HOST || '127.0.0.1').split(':')[0],
+  mysqlPort: Number((process.env.MYSQL_HOST || '').split(':')[1] || process.env.MYSQL_PORT || 3306),
   mysqlUser: process.env.MYSQL_USER || 'root',
   mysqlPassword: process.env.MYSQL_PASSWORD || '',
   mysqlDatabase: process.env.MYSQL_DATABASE || 'elderledger',

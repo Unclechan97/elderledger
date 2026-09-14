@@ -14,7 +14,7 @@ export interface RunResult {
 
 /** 暂停唤醒/网络抖动的典型错误特征 */
 const TRANSIENT_RE = /resuming|ECONNREFUSED|ETIMEDOUT|ECONNRESET|EPIPE|PROTOCOL_CONNECTION_LOST/i;
-const RETRY_DELAYS = [500, 1500, 3000, 5000, 5000]; // ≈15s 内自动等库唤醒
+const RETRY_DELAYS = [500, 1500, 3000, 5000, 5000, 8000, 10000]; // ≈33s 内自动等库唤醒（云托管冷唤醒常见 10-30s）
 
 async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
   for (let i = 0; ; i++) {
