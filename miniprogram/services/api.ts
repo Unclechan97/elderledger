@@ -1,4 +1,4 @@
-import { BASE_URL, API_MODE, CLOUD_ENV } from '../utils/config';
+import { BASE_URL, API_MODE, CLOUD_ENV, CLOUD_SERVICE } from '../utils/config';
 import { identityHeaders } from '../utils/identity';
 
 export interface Category {
@@ -59,7 +59,7 @@ function cloudRequest<T>(method: string, path: string, data?: unknown, header?: 
       config: { env: CLOUD_ENV },
       path,
       method: method as 'GET',
-      header: header || {},
+      header: { 'X-WX-SERVICE': CLOUD_SERVICE, ...(header || {}) },
       data,
       success: (r) => {
         if (r.statusCode < 400) resolve(r.data as T);
