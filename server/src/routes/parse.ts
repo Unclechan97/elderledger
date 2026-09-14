@@ -2,7 +2,7 @@
 // POST /api/parse/image —— 拍照/截图解析（GLM-4V-Flash）
 import { Router } from 'express';
 import multer from 'multer';
-import { db } from '../db/sqlite';
+import { db } from '../db/db';
 import { localDateStr } from '../utils/dates';
 import { regexParse, ParsedTxn } from '../services/parser';
 import { llmParseText, llmParseImage, llmAvailable } from '../services/llm';
@@ -11,8 +11,8 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 *
 
 export const parseRouter = Router();
 
-function categoryByName(name: string, kind: 'expense' | 'income'): { id: number } | null {
-  return (db.prepare('SELECT id FROM category WHERE name = ? AND kind = ?').get(name, kind) as { id: number } | undefined) ?? null;
+async function categoryByName(name: string, kind: 'expense' | 'income'): Promise<{ id: number } | null> {
+  return (await db.get<{ id: number }>('SELECT id FROM category WHERE name = ? AND kind = ?', [name, kind])) ?? null;
 }
 
 function offsetDate(today: string, offset: number): string {
@@ -41,8 +41,8 @@ parseRouter.post('/text', async (req, res) => {
   //    金额准确性 > 日期精度（"上个礼拜日"正则默认今天，可接受的偏差）。
   const parsed: ParsedTxn | null = regexParse(text, today);
   if (parsed) {
-    const cat = categoryByName(parsed.category_name, parsed.kind)
-      ?? categoryByName(parsed.kind === 'expense' ? '其他支出' : '其他收入', parsed.kind);
+    const cat = (await categoryByName(parsed.category_name, parsed.kind))
+      ?? (await categoryByName(parsed.kind === 'expense' ? '其他支出' : '其他收入', parsed.kind));
     if (cat) {
       return res.json({
         kind: parsed.kind,
@@ -60,7 +60,7 @@ parseRouter.post('/text', async (req, res) => {
   if (llmAvailable()) {
     try {
       const r = await llmParseText(text);
-      const cat = categoryByName(r.category, r.kind) ?? categoryByName(r.kind === 'expense' ? '其他支出' : '其他收入', r.kind);
+      const cat = (await categoryByName(r.category, r.kind)) ?? (await categoryByName(r.kind === 'expense' ? '其他支出' : '其他收入', r.kind));
       if (cat) {
         return res.json({
           kind: r.kind,
@@ -115,7 +115,7 @@ parseRouter.post('/image', upload.single('image'), async (req, res) => {
   try {
     const r = await llmParseImage(imageB64, mime);
     if (!r.found) return res.json(fallback);
-    const cat = categoryByName(r.category, r.kind) ?? categoryByName(r.kind === 'expense' ? '其他支出' : '其他收入', r.kind);
+    const cat = (await categoryByName(r.category, r.kind)) ?? (await categoryByName(r.kind === 'expense' ? '其他支出' : '其他收入', r.kind));
     if (!cat) return res.json(fallback);
     return res.json({
       kind: r.kind,

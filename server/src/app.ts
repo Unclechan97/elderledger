@@ -1,5 +1,6 @@
 import express from 'express';
 import { config } from './config';
+import { initDb } from './db/db';
 import { categoriesRouter } from './routes/categories';
 import { transactionsRouter } from './routes/transactions';
 import { summaryRouter } from './routes/summary';
@@ -26,6 +27,14 @@ app.use('/api/tts', ttsRouter);
 app.use('/api/family', familyRouter);
 app.use('/api/export', exportRouter);
 
-app.listen(config.port, '0.0.0.0', () => {
-  console.log(`[elderledger] listening on :${config.port}`);
-});
+// 先建库建表再听端口（云端 MySQL 可能在唤醒，initDb 内带重试）
+initDb()
+  .then(() => {
+    app.listen(config.port, '0.0.0.0', () => {
+      console.log(`[elderledger] listening on :${config.port}`);
+    });
+  })
+  .catch((e) => {
+    console.error('[elderledger] 数据库初始化失败，进程退出等重启:', (e as Error).message);
+    process.exit(1);
+  });

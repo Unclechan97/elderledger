@@ -1,7 +1,7 @@
 // GET /api/export/csv?month=YYYY-MM —— 按月导出 CSV（Excel 友好：UTF-8 BOM + CRLF）
 // 家人视角可用（X-View-As）：导出是只读操作，允许家人帮老人导出
 import { Router } from 'express';
-import { db } from '../db/sqlite';
+import { db } from '../db/db';
 import { resolveUserId, resolveViewUserId } from '../utils/context';
 
 export const exportRouter = Router();
@@ -17,22 +17,21 @@ function csvCell(v: string | number): string {
 const KIND_TEXT: Record<string, string> = { expense: '支出', income: '收入' };
 const SOURCE_TEXT: Record<string, string> = { voice: '语音', photo: '拍照', manual: '手动', family: '家人代记' };
 
-exportRouter.get('/csv', (req, res) => {
+exportRouter.get('/csv', async (req, res) => {
   const month = String(req.query.month || '');
   if (!MONTH_RE.test(month)) return res.status(400).json({ error: 'month 格式应为 YYYY-MM' });
 
-  const selfId = resolveUserId(req);
-  const userId = resolveViewUserId(req, selfId);
+  const selfId = await resolveUserId(req);
+  const userId = await resolveViewUserId(req, selfId);
 
-  const rows = db
-    .prepare(
-      `SELECT t.occurred_on, t.kind, t.amount_fen, t.note, t.source,
-              c.name AS category_name
-       FROM txn t JOIN category c ON c.id = t.category_id
-       WHERE t.user_id = ? AND t.occurred_on >= ? AND t.occurred_on <= ?
-       ORDER BY t.occurred_on ASC, t.id ASC`,
-    )
-    .all(userId, `${month}-01`, `${month}-31`) as Array<{
+  const rows = (await db.all(
+    `SELECT t.occurred_on, t.kind, t.amount_fen, t.note, t.source,
+            c.name AS category_name
+     FROM txn t JOIN category c ON c.id = t.category_id
+     WHERE t.user_id = ? AND t.occurred_on >= ? AND t.occurred_on <= ?
+     ORDER BY t.occurred_on ASC, t.id ASC`,
+    [userId, `${month}-01`, `${month}-31`],
+  )) as Array<{
     occurred_on: string;
     kind: string;
     amount_fen: number;

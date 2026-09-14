@@ -1,14 +1,25 @@
 services:
-  app: # Express 5 + TypeScript + SQLite
+  app: # Express 5 + TypeScript + MySQL
     build: .
     ports:
       - "3000:3000"
     volumes:
-      - ./data:/app/data # elderledger.db
+      - ./data:/app/data # 语音识别失败转储等调试文件
     env_file: .env
-    # asr 模型首载慢（数分钟），不阻塞 app 启动；app 按请求惰性连接
     depends_on:
-      - tts
+      - mysql
+    restart: unless-stopped
+
+  mysql: # 本地开发用；云端用云托管 MySQL（MYSQL_HOST 指向内网地址）
+    image: mysql:8.0
+    command: --lower-case-table-names=1
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD:-elderledger}
+      MYSQL_DATABASE: elderledger
+    ports:
+      - "33061:3306" # 宿主机 3306 已被本机 MySQL 占用，仅调试用，app 走容器网络
+    volumes:
+      - mysql-data:/var/lib/mysql
     restart: unless-stopped
 
   asr: # FunASR runtime（Paraformer 离线版，CPU）
@@ -28,11 +39,6 @@ services:
     restart: unless-stopped
     profiles: ["asr"]
 
-  tts: # edge-tts FastAPI 封装
-    build: ./tts
-    ports:
-      - "55001:55001"
-    restart: unless-stopped
-
 volumes:
   asr-models:
+  mysql-data:
