@@ -31,17 +31,18 @@ transactionsRouter.post('/', async (req, res) => {
   const selfId = await resolveUserId(req);
   const userId = await resolveViewUserId(req, selfId);
 
+  // 幂等：同一 client_token 只入一笔（客户端网关重试 / 老人双击防重复）
+  const clientToken = String((req.body as { client_token?: unknown })?.client_token || '').slice(0, 64);
+  if (clientToken) {
+    const dup = await db.get<{ id: number }>('SELECT id FROM txn WHERE user_id = ? AND client_token = ?', [userId, clientToken]);
+    if (dup) return res.status(200).json({ id: dup.id });
+  }
+
   const info = await db
-    .run('INSERT INTO txn (user_id, kind, amount_fen, category_id, occurred_on, note, source, confidence) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [
-      userId,
-      kind,
-      amount,
-      cat.id,
-      occurred_on,
-      String(note || ''),
-      src,
-      conf,
-    ]);
+    .run(
+      'INSERT INTO txn (user_id, kind, amount_fen, category_id, occurred_on, note, source, confidence, client_token) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [userId, kind, amount, cat.id, occurred_on, String(note || ''), src, conf, clientToken || null],
+    );
   res.status(201).json({ id: info.insertId });
 });
 

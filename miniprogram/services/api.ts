@@ -52,6 +52,26 @@ function httpError(data: unknown, statusCode: number): Error {
   return new Error(msg || `HTTP ${statusCode}`);
 }
 
+const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+const GATEWAY_FAIL_RE = /-606\d{3}|system ?error/i;
+
+/**
+ * 云托管网关偶发 -606001（请求未到容器即被拒，实测一次突发可持续数秒~十几秒）。
+ * 客户端 2s/4s 自动重试（最多 3 次尝试），老人无感；写操作靠 client_token 幂等兜底防重复入库
+ */
+async function gatewayRetry<T>(fn: () => Promise<T>): Promise<T> {
+  for (let i = 0; ; i++) {
+    try {
+      return await fn();
+    } catch (e) {
+      const msg = String((e as Error)?.message ?? e ?? '');
+      if (i >= 2 || API_MODE !== 'cloud' || !GATEWAY_FAIL_RE.test(msg)) throw e;
+      console.warn(`[api] 网关瞬时失败，${(i + 1) * 2}s 后重试:`, msg.slice(0, 80));
+      await sleep((i + 1) * 2000);
+    }
+  }
+}
+
 /** 云托管通道：callContainer（免域名免备案，自动注入 x-wx-openid 身份） */
 function cloudRequest<T>(method: string, path: string, data?: unknown, header?: Record<string, string>): Promise<T> {
   return new Promise((resolve, reject) => {
@@ -72,7 +92,7 @@ function cloudRequest<T>(method: string, path: string, data?: unknown, header?: 
 
 function request<T>(method: 'GET' | 'POST' | 'DELETE', url: string, data?: Record<string, unknown>): Promise<T> {
   const header = identityHeaders();
-  if (API_MODE === 'cloud') return cloudRequest<T>(method, url, data, header);
+  if (API_MODE === 'cloud') return gatewayRetry(() => cloudRequest<T>(method, url, data, header));
   return new Promise((resolve, reject) => {
     wx.request({
       url: `${BASE_URL}${url}`,
@@ -100,6 +120,7 @@ export function createTransaction(p: {
   note?: string;
   source?: string;
   confidence?: number;
+  client_token?: string; // 幂等键：网关重试/双击防重复入库
 }): Promise<{ id: number }> {
   return request<{ id: number }>('POST', '/api/transactions', p);
 }

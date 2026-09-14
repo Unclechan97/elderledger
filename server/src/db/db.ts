@@ -104,9 +104,11 @@ const DDL = [
      note VARCHAR(512) DEFAULT '',
      source VARCHAR(16) NOT NULL,                  -- voice | photo | manual | family
      confidence DOUBLE,
+     client_token VARCHAR(64),                     -- 幂等键：网关重试/双击防重复入库
      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
      INDEX idx_txn_user_date (user_id, occurred_on),
-     INDEX idx_txn_category (category_id)
+     INDEX idx_txn_category (category_id),
+     INDEX idx_txn_client_token (client_token)
    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
   `CREATE TABLE IF NOT EXISTS parse_log (          -- 解析留痕：错误可追溯、prompt 可迭代
      id INT AUTO_INCREMENT PRIMARY KEY,
@@ -153,6 +155,17 @@ export async function initDb(): Promise<void> {
   await withRetry(async () => {
     const p = getPool();
     for (const stmt of DDL) await p.query(stmt);
+    // 旧库平滑升级：幂等键列/索引（新库走上面 DDL 已含，这里对已建库补齐，重复执行忽略）
+    for (const stmt of [
+      'ALTER TABLE txn ADD COLUMN client_token VARCHAR(64) NULL',
+      'ALTER TABLE txn ADD INDEX idx_txn_client_token (client_token)',
+    ]) {
+      try {
+        await p.query(stmt);
+      } catch (e) {
+        if (!/Duplicate column name|Duplicate key name/i.test(String((e as Error).message))) throw e;
+      }
+    }
     for (const [name, icon, color, kind, sort] of SEED_CATEGORIES) {
       await p.query(
         'INSERT INTO category (name, icon, color, kind, sort) SELECT ?, ?, ?, ?, ? FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM category WHERE name = ?)',

@@ -9,6 +9,7 @@ const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 /** 网络类报错转老人能懂的话（原始 errMsg 是 "cloud.callContainer:fail -606001…" 这种） */
 function friendlyErr(e: unknown): string {
   const msg = String((e as Error)?.message ?? e ?? '');
+  console.warn('[voice] 原始错误:', msg); // 排查用：页面文案适老化了，但真实原因必须留痕
   if (/callContainer|-606\d{3}|systemerror|timeout|超时|fail/i.test(msg)) return '服务没连上，请等两秒再按住说话';
   return msg || '识别失败，请检查服务';
 }
@@ -174,6 +175,7 @@ Page({
       note: this.data.recognizedText.slice(0, 100), // 原话入账（明细页备注行完整展示，100 字兜底超长闲聊）
       source: 'voice',
       confidence: this.parsed.confidence,
+      client_token: `v-${Date.now()}-${Math.floor(Math.random() * 1e6)}`, // 幂等：重试/双击不重复入账
     })
       .then(async () => {
         const totalLine = await this.monthTotalLine();
