@@ -43,7 +43,16 @@ transactionsRouter.post('/', async (req, res) => {
       'INSERT INTO txn (user_id, kind, amount_fen, category_id, occurred_on, note, source, confidence, client_token) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
       [userId, kind, amount, cat.id, occurred_on, String(note || ''), src, conf, clientToken || null],
     );
-  res.status(201).json({ id: info.insertId });
+  res.status(201).json({
+    id: info.insertId,
+    // 同响应捎带本月支出总额：省掉小程序保存后的 /api/summary 网关调用（callContainer 有频控）
+    month_total_fen: (
+      (await db.get<{ t: number }>(
+        "SELECT COALESCE(SUM(CASE WHEN kind = 'expense' THEN amount_fen ELSE 0 END), 0) AS t FROM txn WHERE user_id = ? AND occurred_on LIKE ?",
+        [userId, `${occurred_on.slice(0, 7)}-%`],
+      )) as { t: number }
+    ).t,
+  });
 });
 
 transactionsRouter.get('/', async (req, res) => {

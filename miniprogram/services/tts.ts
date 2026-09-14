@@ -8,6 +8,9 @@ import { getTtsAudio } from './api';
 let currentAudio: WechatMiniprogram.InnerAudioContext | null = null;
 let lastTtsFile: string | null = null;
 
+// 客户端音频缓存：同短语（"记好了"等）不重复打网关（callContainer 有频控），服务端缓存之上再省一次调用
+const audioCache = new Map<string, string>();
+
 const TTS_ENABLED_KEY = 'tts_enabled';
 
 /** 播报总开关（默认开）。首页导航行可一键切换 */
@@ -29,19 +32,26 @@ export function setTtsEnabled(on: boolean) {
 
 export function speak(text: string): Promise<void> {
   if (!isTtsEnabled()) return Promise.resolve();
-  return getTtsAudio(text)
-    .then((r) => {
+  return (async () => {
+    let b64 = audioCache.get(text);
+    if (!b64) {
+      const r = await getTtsAudio(text);
       if (!r?.audio_base64) throw new Error('空音频响应'); // 防止空写覆盖出坏文件
-      const file = `${wx.env.USER_DATA_PATH}/tts-${Date.now()}.mp3`;
-      return new Promise<string>((resolve, reject) => {
-        wx.getFileSystemManager().writeFile({
-          filePath: file,
-          data: wx.base64ToArrayBuffer(r.audio_base64),
-          success: () => resolve(file),
-          fail: (e) => reject(new Error(e.errMsg || '写音频失败')),
-        });
+      b64 = r.audio_base64;
+      if (audioCache.size > 30) audioCache.clear(); // 简单防膨胀：语音记账短语空间很小
+      audioCache.set(text, b64);
+    }
+    const file = `${wx.env.USER_DATA_PATH}/tts-${Date.now()}.mp3`;
+    await new Promise<void>((resolve, reject) => {
+      wx.getFileSystemManager().writeFile({
+        filePath: file,
+        data: wx.base64ToArrayBuffer(b64),
+        success: () => resolve(),
+        fail: (e) => reject(new Error(e.errMsg || '写音频失败')),
       });
-    })
+    });
+    return file;
+  })()
     .then(
       (file) =>
         new Promise<void>((resolve) => {

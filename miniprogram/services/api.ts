@@ -60,14 +60,15 @@ const GATEWAY_FAIL_RE = /-606\d{3}|system ?error/i;
  * 客户端 2s/4s 自动重试（最多 3 次尝试），老人无感；写操作靠 client_token 幂等兜底防重复入库
  */
 async function gatewayRetry<T>(fn: () => Promise<T>): Promise<T> {
+  const delays = [2000, 6000, 12000]; // 频控窗口实测可达 1 分钟，梯度拉长；配合每笔账 2 次调用降低触发
   for (let i = 0; ; i++) {
     try {
       return await fn();
     } catch (e) {
       const msg = String((e as Error)?.message ?? e ?? '');
-      if (i >= 2 || API_MODE !== 'cloud' || !GATEWAY_FAIL_RE.test(msg)) throw e;
-      console.warn(`[api] 网关瞬时失败，${(i + 1) * 2}s 后重试:`, msg.slice(0, 80));
-      await sleep((i + 1) * 2000);
+      if (i >= delays.length || API_MODE !== 'cloud' || !GATEWAY_FAIL_RE.test(msg)) throw e;
+      console.warn(`[api] 网关瞬时失败，${delays[i] / 1000}s 后重试:`, msg.slice(0, 80));
+      await sleep(delays[i]);
     }
   }
 }
@@ -121,8 +122,8 @@ export function createTransaction(p: {
   source?: string;
   confidence?: number;
   client_token?: string; // 幂等键：网关重试/双击防重复入库
-}): Promise<{ id: number }> {
-  return request<{ id: number }>('POST', '/api/transactions', p);
+}): Promise<{ id: number; month_total_fen?: number }> {
+  return request<{ id: number; month_total_fen?: number }>('POST', '/api/transactions', p);
 }
 
 export function getTransactions(range: 'today' | 'month', page = 1, pageSize = 20): Promise<TxnListResp> {
@@ -152,9 +153,9 @@ export function parseText(text: string): Promise<ParseResult> {
   return request<ParseResult>('POST', '/api/parse/text', { text });
 }
 
-/** 录音文件上传转写（multipart，字段名 audio） */
-export function uploadAsr(filePath: string): Promise<{ text: string }> {
-  return uploadFileAs<{ text: string }>(filePath, 'audio', '/api/asr');
+/** 录音文件上传转写（multipart，字段名 audio）；响应捎带 parse（服务端合并解析，省一次网关调用） */
+export function uploadAsr(filePath: string): Promise<{ text: string; parse?: ParseResult }> {
+  return uploadFileAs<{ text: string; parse?: ParseResult }>(filePath, 'audio', '/api/asr');
 }
 
 /** 图片上传解析（multipart，字段名 image）→ GLM-4V 结构化记账信息 */

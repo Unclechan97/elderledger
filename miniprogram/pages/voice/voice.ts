@@ -117,15 +117,16 @@ Page({
   async recognize(tempFilePath: string) {
     this.setData({ phase: 'recognizing' });
     try {
-      const { text } = await uploadAsr(tempFilePath);
-      const clean = text.trim();
+      const asrResp = await uploadAsr(tempFilePath);
+      const clean = String(asrResp.text || '').trim();
       if (!clean) {
         this.setData({ phase: 'failed', failText: '没听到声音，请凑近手机再说一遍' });
         void speak('没听到声音，请再试一遍');
         return;
       }
       this.setData({ recognizedText: clean });
-      const p = await parseText(clean);
+      // ASR 响应已捎带解析结果（合并请求省一次网关调用）；旧版服务端无 parse 时回退单独调用
+      const p = asrResp.parse ?? (await parseText(clean));
       if (!p.kind || p.amount_fen <= 0 || !p.category_id) {
         this.setData({ phase: 'failed', failText: p.message || '没听清，请说清楚金额' });
         void speak('没听清金额，请再说一遍，或者手动输入');
@@ -177,8 +178,14 @@ Page({
       confidence: this.parsed.confidence,
       client_token: `v-${Date.now()}-${Math.floor(Math.random() * 1e6)}`, // 幂等：重试/双击不重复入账
     })
-      .then(async () => {
-        const totalLine = await this.monthTotalLine();
+      .then(async (r) => {
+        // 月汇总由保存响应捎带（省一次网关调用）；旧版服务端无此字段时回退单独查
+        let totalLine = '';
+        if (typeof r.month_total_fen === 'number' && r.month_total_fen > 0) {
+          totalLine = `本月已花 ${fenToYuanText(r.month_total_fen)} 元`;
+        } else {
+          totalLine = await this.monthTotalLine();
+        }
         this.parsed = null;
         this.setData({ phase: 'idle', recognizedText: '', saving: false });
         this.showSuccess(`记好了${totalLine ? `，${totalLine}` : ''}`);

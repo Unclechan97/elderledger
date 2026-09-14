@@ -2,6 +2,7 @@ import { Router } from 'express';
 import multer from 'multer';
 import fs from 'node:fs';
 import { transcribeAudio } from '../services/asr';
+import { parseTextCore } from './parse';
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 export const asrRouter = Router();
@@ -25,7 +26,15 @@ asrRouter.post('/', upload.single('audio'), async (req, res) => {
   }
   try {
     const text = await transcribeAudio(audio, mime);
-    res.json({ text });
+    // 同响应捎带解析结果：一次录音只打一次网关（省掉 /api/parse/text 那次调用，
+    // callContainer 有频控，每次记账少一半请求）；解析异常时客户端回退到单独调用
+    let parse;
+    try {
+      parse = await parseTextCore(String(text));
+    } catch (pe) {
+      console.warn('[asr] 解析异常，客户端将回退:', (pe as Error).message);
+    }
+    res.json({ text, parse });
   } catch (e) {
     // 真实原因打日志 + 透传 detail（转写失败可能是音频内容/格式问题，不一定是服务挂了）
     console.error('[asr] 转写失败:', (e as Error).message, `mimetype=${mime} size=${audio.length}`);
