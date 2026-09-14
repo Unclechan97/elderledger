@@ -6,6 +6,13 @@ type Phase = 'idle' | 'recording' | 'recognizing' | 'parsed' | 'failed';
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
+/** 网络类报错转老人能懂的话（原始 errMsg 是 "cloud.callContainer:fail -606001…" 这种） */
+function friendlyErr(e: unknown): string {
+  const msg = String((e as Error)?.message ?? e ?? '');
+  if (/callContainer|-606\d{3}|systemerror|timeout|超时|fail/i.test(msg)) return '服务没连上，请等两秒再按住说话';
+  return msg || '识别失败，请检查服务';
+}
+
 Page({
   data: {
     phase: 'idle' as Phase,
@@ -22,6 +29,7 @@ Page({
 
   recorder: null as WechatMiniprogram.RecorderManager | null,
   successTimer: null as ReturnType<typeof setTimeout> | null,
+  startWatchdog: null as ReturnType<typeof setTimeout> | null,
   parsed: null as {
     kind: 'expense' | 'income';
     amount_fen: number;
@@ -33,9 +41,11 @@ Page({
   onLoad() {
     const rec = wx.getRecorderManager();
     rec.onStart(() => {
+      this.clearStartWatchdog();
       this.setData({ phase: 'recording', recognizedText: '' });
     });
     rec.onStop((r) => {
+      this.clearStartWatchdog();
       if (this.data.phase !== 'recording') return; // 已被取消/超时处理
       // 防误触：点一下就松手是无效录音，引导按住说话
       if (r.duration !== undefined && r.duration < 1000) {
@@ -45,25 +55,57 @@ Page({
       this.recognize(r.tempFilePath);
     });
     rec.onError(() => {
+      this.clearStartWatchdog();
       this.setData({ phase: 'failed', failText: '录音出错了，请再试' });
     });
     this.recorder = rec;
   },
 
   onUnload() {
+    this.clearStartWatchdog();
     stopSpeak();
+  },
+
+  clearStartWatchdog() {
+    if (this.startWatchdog) {
+      clearTimeout(this.startWatchdog);
+      this.startWatchdog = null;
+    }
   },
 
   onVoiceStart() {
     if (this.data.saving) return;
+    if (this.data.phase === 'recording' || this.data.phase === 'recognizing') return;
     stopSpeak();
-    this.recorder?.start({
-      format: 'mp3', // 模拟器不支持 wav（仅真机），mp3 模拟器+真机都支持；服务端统一转 16k wav
-      sampleRate: 16000,
-      encodeBitRate: 96000, // 16k 采样率允许的上限（官方对照表 24000~96000），清晰度优先
-      numberOfChannels: 1,
-      duration: 60000, // 上限 60s 自动停
-    });
+    // 防卡死兜底：开发工具里 RecorderManager.start() 偶发无响应（无 onStart 也无 onError，
+    // 清缓存/重编译后更常见），1.5s 没进录音态就"止血重启"一次，再不行给明确提示
+    this.clearStartWatchdog();
+    this.startWatchdog = setTimeout(() => {
+      if (this.data.phase === 'recording') return;
+      try {
+        this.recorder?.stop(); // 停掉可能卡住的录音会话
+      } catch {
+        /* 未在录音时无害 */
+      }
+      setTimeout(() => {
+        if (this.data.phase === 'recording') return;
+        try {
+          this.recorder?.start(RECORDER_OPTS);
+        } catch {
+          /* 忽略，走下面的终态提示 */
+        }
+        this.startWatchdog = setTimeout(() => {
+          if (this.data.phase !== 'recording') {
+            this.setData({ phase: 'failed', failText: '按钮没反应，请再试一次或改用手动输入' });
+          }
+        }, 1500);
+      }, 300);
+    }, 1500);
+    try {
+      this.recorder?.start(RECORDER_OPTS);
+    } catch {
+      this.setData({ phase: 'failed', failText: '录音启动失败，请再试一次' });
+    }
   },
 
   onVoiceEnd() {
@@ -109,7 +151,7 @@ Page({
       const kindWord = p.kind === 'income' ? '收入' : '支出';
       void speak(`${kindWord} ${fenToYuanText(p.amount_fen)} 元，${catName}，对吗？`);
     } catch (err) {
-      this.setData({ phase: 'failed', failText: (err as Error).message || '识别失败，请检查服务' });
+      this.setData({ phase: 'failed', failText: friendlyErr(err) });
     }
   },
 
@@ -141,7 +183,7 @@ Page({
         void speak('记好了'); // 连续记账：留在本页，方便接着说下一笔
       })
       .catch((err: Error) => {
-        this.setData({ saving: false, phase: 'failed', failText: err.message || '保存失败' });
+        this.setData({ saving: false, phase: 'failed', failText: friendlyErr(err) });
       });
   },
 
@@ -184,3 +226,12 @@ Page({
 });
 
 let voiceCategoryMap: Record<number, { name: string; icon: string }> | null = null;
+
+// 录音参数集中一处（onVoiceStart 与卡死重启共用）
+const RECORDER_OPTS: WechatMiniprogram.RecorderManagerStartOption = {
+  format: 'mp3', // 模拟器不支持 wav（仅真机），mp3 模拟器+真机都支持；服务端统一转 16k wav
+  sampleRate: 16000,
+  encodeBitRate: 96000, // 16k 采样率允许的上限（官方对照表 24000~96000），清晰度优先
+  numberOfChannels: 1,
+  duration: 60000, // 上限 60s 自动停
+};
