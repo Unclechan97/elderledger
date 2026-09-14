@@ -7,3 +7,7 @@ dist/
 *.log
 .DS_Store
 project.private.config.json
+# 微信云托管 CLI 私钥与登录凭据，绝不能进仓库
+*wxcloud-key*
+*.pem
+.wxcloudconfig
