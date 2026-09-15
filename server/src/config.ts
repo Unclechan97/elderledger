@@ -22,4 +22,7 @@ export const config = {
   mysqlUser: process.env.MYSQL_USER || 'root',
   mysqlPassword: process.env.MYSQL_PASSWORD || '',
   mysqlDatabase: process.env.MYSQL_DATABASE || 'elderledger',
+  /** 开放端点（asr/tts/parse）共享密钥：小程序源码内同步内置（miniprogram/utils/config.ts），
+   *  只防第三方蹭 ASR/TTS 配额，不是身份凭证；账本数据的身份与写权限由网关注入的 openid 保证 */
+  appSharedKey: process.env.APP_SHARED_KEY || '6e0e224e91e18969cfe2e3a92fe79798a8a868924f9676be',
 };

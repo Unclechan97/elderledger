@@ -1,4 +1,4 @@
-import { BASE_URL, API_MODE, CLOUD_ENV, CLOUD_SERVICE } from '../utils/config';
+import { BASE_URL, API_MODE, CLOUD_ENV, CLOUD_SERVICE, DIRECT_BASE, APP_SHARED_KEY } from '../utils/config';
 import { identityHeaders } from '../utils/identity';
 
 export interface Category {
@@ -46,10 +46,12 @@ export interface SummaryResp {
   by_income_category: Array<{ category_id: number; name: string; icon: string; color: string; total_fen: number; cnt: number }>;
 }
 
-function httpError(data: unknown, statusCode: number): Error {
+function httpError(data: unknown, statusCode: number): Error & { statusCode?: number } {
   const d = data as { error?: string; detail?: string } | undefined;
-  const msg = [d?.error, d?.detail].filter(Boolean).join('｜');
-  return new Error(msg || `HTTP ${statusCode}`);
+  const msg = [d?.error, d?.detail].filter(Boolean).join('｜') || `HTTP ${statusCode}`;
+  const e = new Error(msg) as Error & { statusCode?: number };
+  e.statusCode = statusCode; // openRequest 靠它区分"服务端拒绝（不回退）"与"网络失败（回退）"
+  return e;
 }
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
@@ -109,6 +111,45 @@ function request<T>(method: 'GET' | 'POST' | 'DELETE', url: string, data?: Recor
   });
 }
 
+/** 开放端点请求头：直连/网关通道都带共享密钥（服务端 openApiGuard 校验） */
+function openHeader(): Record<string, string> {
+  return { 'content-type': 'application/json', 'x-app-key': APP_SHARED_KEY };
+}
+
+/** 公网直连请求（开放端点 JSON 用；绕开 callContainer 网关，无 -606001） */
+function directRequest<T>(method: string, path: string, data?: Record<string, unknown>): Promise<T> {
+  return new Promise((resolve, reject) => {
+    wx.request({
+      url: `${DIRECT_BASE}${path}`,
+      method: method as 'GET',
+      data,
+      header: openHeader(),
+      success: (r) => {
+        if (r.statusCode < 400) resolve(r.data as T);
+        else reject(httpError(r.data, r.statusCode));
+      },
+      fail: (e) => reject(new Error(e.errMsg || '直连请求失败')),
+    });
+  });
+}
+
+/**
+ * 开放端点（asr/tts/parse，无用户数据）统一入口：直连优先，
+ * 网络级失败/5xx 回退 callContainer（自带 gatewayRetry）；服务端 4xx 说明通道是通的，直接抛
+ */
+async function openRequest<T>(method: 'GET' | 'POST', url: string, data?: Record<string, unknown>): Promise<T> {
+  if (API_MODE === 'cloud' && DIRECT_BASE) {
+    try {
+      return await directRequest<T>(method, url, data);
+    } catch (e) {
+      const status = (e as Error & { statusCode?: number }).statusCode;
+      if (status && status < 500) throw e;
+      console.warn('[api] 直连失败，回退 callContainer:', String((e as Error).message).slice(0, 80));
+    }
+  }
+  return request<T>(method, url, data);
+}
+
 export function getCategories(): Promise<Categories> {
   return request<Categories>('GET', '/api/categories');
 }
@@ -150,7 +191,7 @@ export interface ParseResult {
 }
 
 export function parseText(text: string): Promise<ParseResult> {
-  return request<ParseResult>('POST', '/api/parse/text', { text });
+  return openRequest<ParseResult>('POST', '/api/parse/text', { text });
 }
 
 /** 录音文件上传转写（multipart，字段名 audio）；响应捎带 parse（服务端合并解析，省一次网关调用） */
@@ -234,7 +275,7 @@ export function unbindFamily(): Promise<{ ok: boolean }> {
 
 /** 语音播报音频（base64，两条通道同一形状） */
 export function getTtsAudio(text: string): Promise<{ audio_base64: string }> {
-  return request<{ audio_base64: string }>('POST', '/api/tts', { text });
+  return openRequest<{ audio_base64: string }>('POST', '/api/tts', { text });
 }
 
 function readFileBase64(filePath: string): Promise<string> {
@@ -254,30 +295,44 @@ function guessMime(name: string, filePath: string): string {
   return p.endsWith('.png') ? 'image/png' : 'image/jpeg';
 }
 
+/** wx.uploadFile（multipart）：本地通道 + 云端公网直连通道共用（体积比 base64 JSON 小 1/3） */
+function multipartUpload<T>(base: string, filePath: string, name: string, url: string, header: Record<string, string>): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    wx.uploadFile({
+      url: `${base}${url}`,
+      filePath,
+      name,
+      header,
+      success: (r) => {
+        try {
+          const data = JSON.parse(r.data) as T & { error?: string; detail?: string };
+          if (r.statusCode < 400) resolve(data);
+          else reject(httpError(data, r.statusCode));
+        } catch {
+          reject(new Error(`响应不是 JSON（HTTP ${r.statusCode}）`));
+        }
+      },
+      fail: (e) => reject(new Error(e.errMsg || '上传失败')),
+    });
+  });
+}
+
 /**
- * 文件上传：local 走 wx.uploadFile（multipart）；cloud 走 callContainer JSON base64
- * （callContainer 不支持 multipart，服务端两条通道都收）
+ * 文件上传三通道：公网直连 multipart 优先（绕开 callContainer 网关 -606001，网络级失败/5xx 回退），
+ * local 走 wx.uploadFile multipart；兜底 callContainer JSON base64（其不支持 multipart）
  */
 async function uploadFileAs<T>(filePath: string, name: string, url: string): Promise<T> {
+  if (API_MODE === 'cloud' && DIRECT_BASE) {
+    try {
+      return await multipartUpload<T>(DIRECT_BASE, filePath, name, url, { 'x-app-key': APP_SHARED_KEY });
+    } catch (e) {
+      const status = (e as Error & { statusCode?: number }).statusCode;
+      if (status && status < 500) throw e; // 服务端明确拒绝（密钥/参数问题），通道是通的，不回退
+      console.warn('[api] 直连上传失败，回退 callContainer:', String((e as Error).message).slice(0, 80));
+    }
+  }
   if (API_MODE === 'local') {
-    return new Promise<T>((resolve, reject) => {
-      wx.uploadFile({
-        url: `${BASE_URL}${url}`,
-        filePath,
-        name,
-        header: identityHeaders(),
-        success: (r) => {
-          try {
-            const data = JSON.parse(r.data) as T & { error?: string; detail?: string };
-            if (r.statusCode < 400) resolve(data);
-            else reject(new Error([data.error, data.detail].filter(Boolean).join('｜') || `HTTP ${r.statusCode}`));
-          } catch {
-            reject(new Error(`响应不是 JSON（HTTP ${r.statusCode}）`));
-          }
-        },
-        fail: (e) => reject(new Error(e.errMsg || '上传失败')),
-      });
-    });
+    return multipartUpload<T>(BASE_URL, filePath, name, url, identityHeaders());
   }
   const b64 = await readFileBase64(filePath);
   return request<T>('POST', url, { [`${name}_base64`]: b64, mime: guessMime(name, filePath) });

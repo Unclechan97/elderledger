@@ -9,10 +9,13 @@ import { parseRouter } from './routes/parse';
 import { ttsRouter } from './routes/tts';
 import { familyRouter } from './routes/family';
 import { exportRouter } from './routes/export';
+import { openApiGuard } from './utils/openApiGuard';
 
 const app = express();
 // 3mb：云端 callContainer 不支持 multipart，音频/图片以 base64 JSON 上行（60s 录音 ≈1MB）
 app.use(express.json({ limit: '3mb' }));
+// 开放端点（asr/tts/parse）共享密钥校验：公网直连通道防蹭配额，callContainer 通道客户端同样带此头
+app.use(openApiGuard);
 
 app.get('/health', (_req, res) => {
   res.json({ ok: true, ts: Date.now() });
