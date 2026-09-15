@@ -1,5 +1,6 @@
 // 直连云托管公网域名压测 ASR（绕过 callContainer 网关，定位 -606001 归因）
 // 用法: node scripts/direct-asr-stress.mjs [轮数=10]
+const APP_KEY = '6e0e224e91e18969cfe2e3a92fe79798a8a868924f9676be'; // 与 miniprogram/utils/config.ts 同源
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
@@ -19,7 +20,7 @@ for (let i = 1; i <= N; i++) {
   try {
     const r = await fetch(`${BASE}/api/asr`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json', 'x-wx-openid': 'diag-direct-curl' },
+      headers: { 'content-type': 'application/json', 'x-app-key': APP_KEY },
       body: JSON.stringify({ audio_base64: b64, mime: 'audio/wav' }),
       signal: AbortSignal.timeout(60000),
     });
