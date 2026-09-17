@@ -60,6 +60,7 @@ export function speak(text: string): Promise<void> {
           lastTtsFile = file;
           const audio = wx.createInnerAudioContext();
           currentAudio = audio;
+          audio.obeyMuteSwitch = false; // 老人手机静音模式常开：播报必须出声（iOS 默认遵循静音开关会直接没声音）
           audio.src = file;
           const done = () => {
             audio.destroy();
@@ -78,8 +79,9 @@ export function speak(text: string): Promise<void> {
           audio.play();
         }),
     )
-    .catch(() => {
-      /* 播报失败静默：文字提示仍在，老人操作不被打断 */
+    .catch((e) => {
+      // 播报失败不打扰老人（文字提示仍在），但留痕方便真机 vConsole 排查
+      console.warn('[tts] 播报失败:', String((e as Error)?.message || e).slice(0, 100));
     });
 }
 
