@@ -94,7 +94,8 @@ function cloudRequest<T>(method: string, path: string, data?: unknown, header?: 
 }
 
 function request<T>(method: 'GET' | 'POST' | 'DELETE', url: string, data?: Record<string, unknown>): Promise<T> {
-  const header = identityHeaders();
+  // x-app-key 全通道必带：直连失败回落 callContainer 时，开放端点同样要过服务端 openApiGuard
+  const header = { 'x-app-key': APP_SHARED_KEY, ...identityHeaders() };
   if (API_MODE === 'cloud') return gatewayRetry(() => cloudRequest<T>(method, url, data, header));
   return new Promise((resolve, reject) => {
     wx.request({
@@ -332,7 +333,7 @@ async function uploadFileAs<T>(filePath: string, name: string, url: string): Pro
     }
   }
   if (API_MODE === 'local') {
-    return multipartUpload<T>(BASE_URL, filePath, name, url, identityHeaders());
+    return multipartUpload<T>(BASE_URL, filePath, name, url, { 'x-app-key': APP_SHARED_KEY, ...identityHeaders() });
   }
   const b64 = await readFileBase64(filePath);
   return request<T>('POST', url, { [`${name}_base64`]: b64, mime: guessMime(name, filePath) });
