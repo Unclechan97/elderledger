@@ -59,7 +59,7 @@ Page({
   async recognize(photoPath: string) {
     this.setData({ phase: 'working', photoPath });
     try {
-      const p = await parseImage(photoPath);
+      const p = await parseImage(await compressForUpload(photoPath));
       if (!p.kind || p.amount_fen <= 0 || !p.category_id) {
         this.setData({ phase: 'failed', failText: p.message || '没看清这张图，请拍清楚金额' });
         void speak('没看清这张图，请拍清楚金额');
@@ -84,7 +84,9 @@ Page({
       const kindWord = p.kind === 'income' ? '收入' : '支出';
       void speak(`${kindWord} ${fenToYuanText(p.amount_fen)} 元，${cat?.name ?? ''}，对吗？`);
     } catch (err) {
-      this.setData({ phase: 'failed', failText: (err as Error).message || '识别失败，请检查服务' });
+      const msg = String((err as Error)?.message ?? err ?? '');
+      console.warn('[photo] 原始错误:', msg); // 页面文案适老化了，真实原因必须留痕
+      this.setData({ phase: 'failed', failText: friendlyErr(msg) });
     }
   },
 
@@ -158,3 +160,45 @@ Page({
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   },
 });
+
+/** 报错转老人能懂的话（网关/网络类错误是英文码，直接显示等于没说） */
+function friendlyErr(msg: string): string {
+  if (/callContainer|-606\d{3}|system ?error|timeout|超时|fail/i.test(msg)) return '网络不好，请再试一次或改用手动输入';
+  return msg || '识别失败，请检查服务';
+}
+
+/**
+ * 压图后再上传：微信 chooseMedia 的 compressed 只是轻压，新手机随手 1-2MB，
+ * base64 后 2-3MB 会超 callContainer 网关包体上限（网关层直接拒 = -606001）。
+ * 长边 1280 对小票/截图文字识别足够；压缩失败用原图兜底
+ */
+function compressForUpload(src: string): Promise<string> {
+  return new Promise((resolve) => {
+    wx.compressImage({
+      src,
+      quality: 60,
+      compressedWidth: 1280,
+      success: (r) => {
+        wx.getFileSystemManager().getFileInfo({
+          filePath: r.tempFilePath,
+          success: (info) => {
+            if (info.size > 1_200_000) {
+              // 还嫌大（个别 png 截图）：再压狠一轮
+              wx.compressImage({
+                src: r.tempFilePath,
+                quality: 40,
+                compressedWidth: 960,
+                success: (r2) => resolve(r2.tempFilePath),
+                fail: () => resolve(r.tempFilePath),
+              });
+              return;
+            }
+            resolve(r.tempFilePath);
+          },
+          fail: () => resolve(r.tempFilePath),
+        });
+      },
+      fail: () => resolve(src),
+    });
+  });
+}
