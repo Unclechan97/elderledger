@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import multer from 'multer';
-import fs from 'node:fs';
 import { transcribeAudio } from '../services/asr';
 import { parseTextCore } from './parse';
 
@@ -38,11 +37,6 @@ asrRouter.post('/', upload.single('audio'), async (req, res) => {
   } catch (e) {
     // 真实原因打日志 + 透传 detail（转写失败可能是音频内容/格式问题，不一定是服务挂了）
     console.error('[asr] 转写失败:', (e as Error).message, `mimetype=${mime} size=${audio.length}`);
-    // 诊断：把解不开的音频覆盖落盘（只留最近一份，真机验收后可移除）
-    try {
-      fs.writeFileSync('/app/data/failed-audio-last.bin', audio);
-      console.error('[asr] 原始音频已存 data/failed-audio-last.bin');
-    } catch { /* dump 失败不影响主流程 */ }
     res.status(502).json({
       error: '识别服务暂时不可用，请重试或手动输入',
       detail: String((e as Error).message),
