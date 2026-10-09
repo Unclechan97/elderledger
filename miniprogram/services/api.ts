@@ -168,7 +168,7 @@ export function createTransaction(p: {
   return request<{ id: number; month_total_fen?: number }>('POST', '/api/transactions', p);
 }
 
-export function getTransactions(range: 'today' | 'month', page = 1, pageSize = 20): Promise<TxnListResp> {
+export function getTransactions(range: 'today' | 'month' | 'all', page = 1, pageSize = 20): Promise<TxnListResp> {
   return request<TxnListResp>('GET', `/api/transactions?range=${range}&page=${page}&pageSize=${pageSize}`);
 }
 

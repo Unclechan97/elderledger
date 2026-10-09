@@ -59,12 +59,18 @@ transactionsRouter.get('/', async (req, res) => {
   const selfId = await resolveUserId(req);
   const userId = await resolveViewUserId(req, selfId);
 
-  const range = req.query.range === 'today' ? 'today' : 'month';
+  // all：全部历史（老人安全感：能翻到自己从第一笔起的每一笔账）
+  const range = req.query.range === 'today' ? 'today' : req.query.range === 'all' ? 'all' : 'month';
   const today = localDateStr();
   const monthPrefix = today.slice(0, 7);
 
-  const where = range === 'today' ? 't.occurred_on = ? AND t.user_id = ?' : 't.occurred_on >= ? AND t.occurred_on <= ? AND t.user_id = ?';
-  const params = range === 'today' ? [today, userId] : [`${monthPrefix}-01`, `${monthPrefix}-31`, userId];
+  const where =
+    range === 'today'
+      ? 't.occurred_on = ? AND t.user_id = ?'
+      : range === 'all'
+        ? 't.user_id = ?'
+        : 't.occurred_on >= ? AND t.occurred_on <= ? AND t.user_id = ?';
+  const params = range === 'today' ? [today, userId] : range === 'all' ? [userId] : [`${monthPrefix}-01`, `${monthPrefix}-31`, userId];
 
   const base = `FROM txn t JOIN category c ON c.id = t.category_id WHERE ${where}`;
   const { n } = (await db.get<{ n: number }>(`SELECT COUNT(*) AS n ${base}`, params)) as { n: number };

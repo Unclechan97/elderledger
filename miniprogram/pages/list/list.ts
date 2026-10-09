@@ -7,7 +7,7 @@ const PAGE_SIZE = 20;
 
 Page({
   data: {
-    range: 'today' as 'today' | 'month',
+    range: 'today' as 'today' | 'month' | 'all',
     items: [] as Array<TxnItem & { amountText: string }>,
     expenseText: '0.00',
     incomeText: '0.00',
@@ -30,7 +30,7 @@ Page({
   },
 
   setRange(e: WechatMiniprogram.TouchEvent) {
-    const range = String(e.currentTarget.dataset.range) as 'today' | 'month';
+    const range = String(e.currentTarget.dataset.range) as 'today' | 'month' | 'all';
     if (range !== this.data.range) {
       this.setData({ range });
       this.load();
